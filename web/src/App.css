@@ -2,7 +2,7 @@
   width: 100%;
   max-width: 100%;
   margin: 0;
-  padding: 0.5rem clamp(0.55rem, 1vw, 1rem) 1rem;
+  padding: 0.4rem clamp(0.45rem, 0.9vw, 0.85rem) 0.85rem;
   min-height: 100dvh;
   display: flex;
   flex-direction: column;
@@ -400,17 +400,17 @@
 
 .stack {
   display: grid;
-  gap: 0.75rem;
+  gap: 0.55rem;
 }
 
 .hero-panel {
   display: flex;
   justify-content: space-between;
-  gap: 1.25rem;
+  gap: 0.85rem;
   align-items: stretch;
-  padding: 1.15rem 1.25rem;
+  padding: 0.75rem 0.85rem;
   border: 1px solid var(--line);
-  border-radius: 16px;
+  border-radius: 12px;
   background:
     linear-gradient(135deg, rgba(47, 143, 116, 0.22), transparent 42%),
     linear-gradient(200deg, rgba(212, 163, 92, 0.1), transparent 50%),
@@ -428,24 +428,24 @@
 }
 
 .hero-panel h1 {
-  margin: 0.1rem 0 0.3rem;
-  font-size: clamp(1.2rem, 2.1vw, 1.75rem);
+  margin: 0.05rem 0 0.2rem;
+  font-size: clamp(1.05rem, 1.8vw, 1.4rem);
   line-height: 1.15;
 }
 
 .hero-stats {
   display: grid;
-  grid-template-columns: repeat(2, minmax(5.5rem, 1fr));
-  gap: 0.55rem;
-  min-width: min(100%, 14rem);
+  grid-template-columns: repeat(2, minmax(4.5rem, 1fr));
+  gap: 0.35rem;
+  min-width: min(100%, 12.5rem);
 }
 
 .hero-stats > div,
 .hero-stats > button,
 .hero-stats > a {
   border: 1px solid var(--line);
-  border-radius: 12px;
-  padding: 0.55rem 0.7rem;
+  border-radius: 9px;
+  padding: 0.35rem 0.5rem;
   background: rgba(0, 0, 0, 0.22);
   color: inherit;
   text-align: left;
@@ -472,16 +472,16 @@
 
 .hero-stats span {
   display: block;
-  font-size: 0.68rem;
+  font-size: 0.58rem;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.05em;
   color: var(--muted);
 }
 
 .hero-stats strong {
   display: block;
-  margin-top: 0.15rem;
-  font-size: 1.15rem;
+  margin-top: 0.08rem;
+  font-size: 0.98rem;
   font-family: 'Bricolage Grotesque', Figtree, sans-serif;
 }
 
@@ -656,7 +656,7 @@
   margin: 0;
   max-width: 70ch;
   color: var(--muted);
-  font-size: 0.84rem;
+  font-size: 0.78rem;
 }
 
 .hero-actions,
@@ -673,7 +673,7 @@
 
 .page-head h1 {
   margin: 0;
-  font-size: clamp(1.15rem, 1.7vw, 1.4rem);
+  font-size: clamp(1.05rem, 1.5vw, 1.25rem);
 }
 
 .voters-head {
@@ -935,11 +935,12 @@
 .secondary-btn,
 .ghost-btn {
   border-radius: 999px;
-  padding: 0.4rem 0.85rem;
+  padding: 0.28rem 0.7rem;
   border: 1px solid var(--line);
   cursor: pointer;
   text-decoration: none;
   display: inline-flex;
+  font-size: 0.78rem;
   align-items: center;
   font-size: 0.9rem;
 }
@@ -960,7 +961,7 @@
   background: transparent;
   color: var(--muted);
   align-self: end;
-  height: 42px;
+  height: 34px;
 }
 
 .primary-btn:hover,
@@ -1069,9 +1070,9 @@
 
 .panel {
   border: 1px solid var(--line);
-  border-radius: 12px;
+  border-radius: 10px;
   background: rgba(18, 32, 25, 0.88);
-  padding: 0.7rem 0.85rem 0.8rem;
+  padding: 0.55rem 0.65rem 0.6rem;
   min-width: 0;
 }
 
@@ -1079,13 +1080,13 @@
   display: flex;
   justify-content: space-between;
   align-items: baseline;
-  gap: 0.75rem;
-  margin-bottom: 0.6rem;
+  gap: 0.55rem;
+  margin-bottom: 0.4rem;
 }
 
 .panel-head h2 {
   margin: 0;
-  font-size: 1.1rem;
+  font-size: 0.95rem;
 }
 
 .chart-box {
@@ -1564,9 +1565,9 @@
 .filters {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.55rem;
+  gap: 0.4rem;
   align-items: end;
-  padding: 0.75rem 0.85rem;
+  padding: 0.55rem 0.65rem;
   border: 1px solid var(--line);
   border-radius: 14px;
   background: rgba(18, 32, 25, 0.75);
@@ -1769,12 +1770,12 @@
 .voter-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.88rem;
+  font-size: 0.78rem;
 }
 
 .voter-table th,
 .voter-table td {
-  padding: 0.7rem 0.8rem;
+  padding: 0.4rem 0.5rem;
   border-bottom: 1px solid var(--line);
   text-align: left;
   vertical-align: top;
@@ -2615,7 +2616,7 @@
   .toolbar-btn,
   .ghost-btn,
   .primary-btn {
-    min-height: 2.6rem;
+    min-height: 2.25rem;
   }
 
   /* Voter detail: full-width bottom sheet for one-handed mobile use */
@@ -2688,28 +2689,42 @@
   }
 
   .app-shell {
-    padding: 0.45rem 0.55rem calc(0.95rem + env(safe-area-inset-bottom));
+    padding: 0.35rem 0.45rem calc(0.8rem + env(safe-area-inset-bottom));
   }
 
   .topbar {
-    margin-bottom: 0.55rem;
+    margin-bottom: 0.45rem;
   }
 
   .brand-mark {
-    font-size: 1rem;
+    font-size: 0.95rem;
   }
 
   .hero-panel {
-    padding: 0.8rem 0.75rem;
-    border-radius: 12px;
+    padding: 0.6rem 0.65rem;
+    border-radius: 10px;
   }
 
   .page-head h1 {
-    font-size: 1.15rem;
+    font-size: 1.05rem;
   }
 
   .page-head .lede {
-    font-size: 0.82rem;
+    font-size: 0.74rem;
+  }
+
+  .quick-card {
+    padding: 0.4rem 0.45rem;
+  }
+
+  .quick-card strong {
+    font-size: 0.95rem;
+  }
+
+  .nav {
+    height: 2.15rem;
+    padding: 0 0.55rem;
+    font-size: 0.68rem;
   }
 
   .chart-box {
@@ -2913,7 +2928,7 @@
 .quick-actions {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 0.55rem;
+  gap: 0.35rem;
 }
 
 .quick-actions-4 {
@@ -3081,26 +3096,26 @@
 .quick-card {
   appearance: none;
   border: 1px solid var(--line);
-  border-radius: 14px;
+  border-radius: 10px;
   background: rgba(18, 32, 25, 0.9);
   color: var(--text);
   text-align: left;
-  padding: 0.75rem 0.85rem;
+  padding: 0.45rem 0.55rem;
   cursor: pointer;
   display: flex;
   flex-direction: column;
-  gap: 0.2rem;
+  gap: 0.1rem;
   min-width: 0;
   transition: transform 0.15s ease, border-color 0.15s ease;
 }
 
 .quick-card:hover {
-  transform: translateY(-2px);
+  transform: translateY(-1px);
   border-color: rgba(212, 163, 92, 0.5);
 }
 
 .quick-card span {
-  font-size: 0.72rem;
+  font-size: 0.62rem;
   color: var(--muted);
   font-weight: 700;
   letter-spacing: 0.02em;
@@ -3108,7 +3123,7 @@
 
 .quick-card strong {
   font-family: 'Bricolage Grotesque', Figtree, sans-serif;
-  font-size: 1.35rem;
+  font-size: 1.05rem;
   font-weight: 800;
   line-height: 1.1;
 }
@@ -3199,9 +3214,9 @@
   background: rgba(18, 32, 25, 0.85);
   color: var(--muted);
   font: inherit;
-  font-size: 0.78rem;
+  font-size: 0.7rem;
   font-weight: 700;
-  padding: 0.35rem 0.75rem;
+  padding: 0.28rem 0.6rem;
   cursor: pointer;
 }
 
@@ -3242,10 +3257,10 @@
   }
 }
 
-/* Calmer density */
+/* Compact working density */
 .dash-home .stack,
 .dash-home {
-  gap: 0.85rem;
+  gap: 0.5rem;
 }
 
 .page-head .lede {
@@ -3254,4 +3269,24 @@
 
 .brand-sub {
   max-width: 36rem;
+}
+
+.voters-head {
+  padding: 0.55rem 0.7rem;
+}
+
+.compact-table th,
+.compact-table td {
+  padding: 0.32rem 0.4rem;
+  font-size: 0.74rem;
+}
+
+.eyebrow {
+  font-size: 0.62rem;
+  margin: 0;
+}
+
+.hero-actions {
+  gap: 0.4rem;
+  margin-top: 0.35rem;
 }
