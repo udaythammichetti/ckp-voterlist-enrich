@@ -5,13 +5,13 @@ import { useLocale } from '../context/Locale'
 import { useVoterData } from '../context/VoterData'
 
 const links = [
-  { to: '/', label: 'Dashboard', end: true },
-  { to: '/voters', label: 'Voters' },
-  { to: '/families', label: 'Families' },
-  { to: '/wards', label: 'Wards' },
-  { to: '/villages', label: 'Villages' },
-  { to: '/campaign', label: 'Campaign' },
-  { to: '/consolidated', label: 'Consolidated' },
+  { to: '/', label: 'Dashboard', short: 'Home', end: true },
+  { to: '/voters', label: 'Voters', short: 'Voters' },
+  { to: '/families', label: 'Families', short: 'Family' },
+  { to: '/wards', label: 'Wards', short: 'Wards' },
+  { to: '/villages', label: 'Villages', short: 'Village' },
+  { to: '/campaign', label: 'Campaign', short: 'Campaign' },
+  { to: '/consolidated', label: 'Consolidated', short: 'Report' },
 ]
 
 function titleForPath(pathname) {
@@ -44,7 +44,6 @@ export default function Shell() {
     document.documentElement.lang = lang === 'te' ? 'te' : 'en'
   }, [pathname, lang, t])
 
-  // Scroll active tab inside the nav scroller only (don't jump the page).
   useEffect(() => {
     const nav = navRef.current
     if (!nav) return undefined
@@ -61,7 +60,6 @@ export default function Shell() {
     return () => cancelAnimationFrame(frame)
   }, [pathname, lang])
 
-  // New page → start at top (mobile feels broken otherwise).
   useEffect(() => {
     window.scrollTo(0, 0)
   }, [pathname])
@@ -86,6 +84,7 @@ export default function Shell() {
                 type="button"
                 className={lang === 'en' ? 'is-active' : ''}
                 onClick={() => setLanguage('en')}
+                aria-pressed={lang === 'en'}
               >
                 EN
               </button>
@@ -93,30 +92,37 @@ export default function Shell() {
                 type="button"
                 className={lang === 'te' ? 'is-active' : ''}
                 onClick={() => setLanguage('te')}
+                aria-pressed={lang === 'te'}
               >
-                తెలుగు
+                <span className="lang-full">తెలుగు</span>
+                <span className="lang-short">తె</span>
               </button>
             </div>
-            <a className="logout-link" href="/logout">
+            <a className="logout-link" href="/logout" title="Sign out">
               Logout
             </a>
           </div>
         </div>
-        <nav ref={navRef} className="nav-links" aria-label="Primary">
-          {links.map((l) => {
-            const active = pathMatches(l.to, pathname, l.end)
-            return (
-              <NavLink
-                key={l.to}
-                to={l.to}
-                end={l.end}
-                className={() => (active ? 'nav active' : 'nav')}
-                aria-current={active ? 'page' : undefined}
-              >
-                {t(l.label)}
-              </NavLink>
-            )
-          })}
+
+        <nav ref={navRef} className="nav-rail" aria-label="Primary">
+          <div className="nav-links">
+            {links.map((l) => {
+              const active = pathMatches(l.to, pathname, l.end)
+              return (
+                <NavLink
+                  key={l.to}
+                  to={l.to}
+                  end={l.end}
+                  className={() => (active ? 'nav active' : 'nav')}
+                  aria-current={active ? 'page' : undefined}
+                  title={t(l.label)}
+                >
+                  <span className="nav-label-full">{t(l.label)}</span>
+                  <span className="nav-label-short">{t(l.short)}</span>
+                </NavLink>
+              )
+            })}
+          </div>
         </nav>
       </header>
       <p className="print-only print-banner">
