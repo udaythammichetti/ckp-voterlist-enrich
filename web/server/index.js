@@ -11,6 +11,7 @@ import {
   migrate,
   resetPool,
   upsertEnrichment,
+  validateDatabaseUrl,
 } from './db.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -38,7 +39,13 @@ function broadcast(event, data) {
 }
 
 async function migrateWithRetry(attempts = 15) {
-  const info = databaseHostInfo()
+  const check = validateDatabaseUrl()
+  if (!check.ok) {
+    console.error(`[db] ${check.error}`)
+    throw new Error(check.error)
+  }
+
+  const info = check.info
   console.log(
     `[db] migrate start host=${info.host} ssl=${info.ssl} internal=${info.likelyInternal}`,
   )

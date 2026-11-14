@@ -14,17 +14,45 @@ export function databaseHostInfo() {
   if (!raw) return { configured: false }
   try {
     const u = new URL(raw)
+    const host = u.hostname || ''
+    const looksLikeWebService =
+      host.endsWith('.onrender.com') && !host.includes('-postgres.')
     return {
       configured: true,
-      host: u.hostname,
+      host,
       port: u.port || '5432',
       database: u.pathname?.replace(/^\//, '') || '',
       ssl: shouldUseSsl(raw),
-      likelyInternal: !u.hostname.includes('render.com'),
+      likelyInternal: !host.includes('render.com'),
+      looksLikeWebService,
     }
   } catch {
-    return { configured: true, host: '(unparseable)', ssl: true, likelyInternal: false }
+    return {
+      configured: true,
+      host: '(unparseable)',
+      ssl: true,
+      likelyInternal: false,
+      looksLikeWebService: false,
+    }
   }
+}
+
+/** True when DATABASE_URL is clearly not a Postgres host. */
+export function validateDatabaseUrl() {
+  const info = databaseHostInfo()
+  if (!info.configured) {
+    return { ok: false, error: 'DATABASE_URL is missing' }
+  }
+  if (info.looksLikeWebService) {
+    return {
+      ok: false,
+      error:
+        `DATABASE_URL host is "${info.host}" (your Web Service). ` +
+        'Set it to the Postgres Internal Database URL from the database Info page ' +
+        '(host looks like dpg-xxxxx-a), not the .onrender.com website URL.',
+    }
+  }
+  return { ok: true, info }
 }
 
 /**
