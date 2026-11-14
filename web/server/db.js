@@ -29,6 +29,8 @@ export async function migrate() {
       relation_type TEXT NOT NULL DEFAULT '',
       relation_name TEXT NOT NULL DEFAULT '',
       house TEXT NOT NULL DEFAULT '',
+      age INTEGER,
+      gender TEXT NOT NULL DEFAULT '',
       phone TEXT NOT NULL DEFAULT '',
       current_address TEXT NOT NULL DEFAULT '',
       notes TEXT NOT NULL DEFAULT '',
@@ -37,6 +39,11 @@ export async function migrate() {
     );
     CREATE INDEX IF NOT EXISTS voter_enrichment_updated_at_idx
       ON voter_enrichment (updated_at DESC);
+  `)
+  // Older deploys may lack age/gender — add safely.
+  await db.query(`
+    ALTER TABLE voter_enrichment ADD COLUMN IF NOT EXISTS age INTEGER;
+    ALTER TABLE voter_enrichment ADD COLUMN IF NOT EXISTS gender TEXT NOT NULL DEFAULT '';
   `)
   return true
 }
@@ -48,6 +55,8 @@ function rowToClient(row) {
     relationType: row.relation_type || '',
     relationName: row.relation_name || '',
     house: row.house || '',
+    age: row.age == null ? null : Number(row.age),
+    gender: row.gender || '',
     phone: row.phone || '',
     currentAddress: row.current_address || '',
     notes: row.notes || '',
@@ -84,11 +93,19 @@ export async function upsertEnrichment(epic, patch = {}) {
     relationType: '',
     relationName: '',
     house: '',
+    age: null,
+    gender: '',
     phone: '',
     currentAddress: '',
     notes: '',
     voterStatus: '',
   }
+  const nextAge =
+    patch.age !== undefined
+      ? patch.age === null || patch.age === ''
+        ? null
+        : Number(patch.age)
+      : prev.age
   const next = {
     name: patch.name !== undefined ? String(patch.name || '') : prev.name,
     relationType:
@@ -96,6 +113,8 @@ export async function upsertEnrichment(epic, patch = {}) {
     relationName:
       patch.relationName !== undefined ? String(patch.relationName || '') : prev.relationName,
     house: patch.house !== undefined ? String(patch.house || '') : prev.house,
+    age: Number.isFinite(nextAge) ? nextAge : null,
+    gender: patch.gender !== undefined ? String(patch.gender || '') : prev.gender,
     phone: patch.phone !== undefined ? String(patch.phone || '') : prev.phone,
     currentAddress:
       patch.currentAddress !== undefined
@@ -109,14 +128,16 @@ export async function upsertEnrichment(epic, patch = {}) {
   const { rows } = await db.query(
     `
     INSERT INTO voter_enrichment (
-      epic, name, relation_type, relation_name, house,
+      epic, name, relation_type, relation_name, house, age, gender,
       phone, current_address, notes, voter_status, updated_at
-    ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,NOW())
+    ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,NOW())
     ON CONFLICT (epic) DO UPDATE SET
       name = EXCLUDED.name,
       relation_type = EXCLUDED.relation_type,
       relation_name = EXCLUDED.relation_name,
       house = EXCLUDED.house,
+      age = EXCLUDED.age,
+      gender = EXCLUDED.gender,
       phone = EXCLUDED.phone,
       current_address = EXCLUDED.current_address,
       notes = EXCLUDED.notes,
@@ -130,6 +151,8 @@ export async function upsertEnrichment(epic, patch = {}) {
       next.relationType,
       next.relationName,
       next.house,
+      next.age,
+      next.gender,
       next.phone,
       next.currentAddress,
       next.notes,

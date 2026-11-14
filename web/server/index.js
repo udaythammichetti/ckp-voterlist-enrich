@@ -120,7 +120,8 @@ app.get('/api/events', (req, res) => {
 
 app.use(express.static(dist, { index: false, maxAge: '1h' }))
 
-app.get('*', (req, res, next) => {
+// Express 5 path-to-regexp requires a named splat (bare "*" crashes on boot).
+app.get('/{*spa}', (req, res, next) => {
   if (req.path.startsWith('/api/')) return next()
   res.sendFile(path.join(dist, 'index.html'), (err) => {
     if (err) next(err)
