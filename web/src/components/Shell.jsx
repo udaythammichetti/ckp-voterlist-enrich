@@ -28,7 +28,7 @@ function titleForPath(pathname) {
 }
 
 export default function Shell() {
-  const { loading, voters } = useVoterData()
+  const { loading, voters, dbLive } = useVoterData()
   const { lang, setLanguage, t } = useLocale()
   const { pathname } = useLocation()
 
@@ -45,6 +45,7 @@ export default function Shell() {
           <p className="brand-mark">Chukkavaripalli</p>
           <p className="brand-sub">
             {!loading ? `${voters.length.toLocaleString()} electors` : 'Loading…'}
+            {dbLive ? <span className="db-live"> · Live DB</span> : null}
           </p>
         </div>
         <div className="topbar-right">

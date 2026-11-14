@@ -4,7 +4,21 @@ import {
   clearLatestDataset,
   saveLatestDataset,
 } from '../lib/dataStore'
-import { computeAgeBand, setEnrichment } from '../lib/enrichment'
+import {
+  checkEnrichmentApi,
+  fetchEnrichmentMap,
+  importEnrichmentMap,
+  isEnrichmentApiAvailable,
+  putEnrichment,
+  subscribeEnrichmentEvents,
+} from '../lib/apiEnrichment'
+import {
+  computeAgeBand,
+  loadEnrichmentMap,
+  mergeEnrichmentRow,
+  replaceEnrichmentMap,
+  setEnrichment,
+} from '../lib/enrichment'
 import {
   downloadEnrichmentPatch,
   downloadVotersVersion,
@@ -25,12 +39,35 @@ import {
 
 const VoterDataContext = createContext(null)
 
+function applyRowToVoter(v, saved) {
+  const next = { ...v }
+  if (saved.name) next.name = saved.name
+  if (saved.relationType) next.relationType = saved.relationType
+  if (saved.relationName) next.relationName = saved.relationName
+  if (saved.house) next.house = saved.house
+  if (saved.gender) next.gender = saved.gender
+  if (saved.age != null) {
+    next.age = saved.age
+    next.ageBand = computeAgeBand(saved.age)
+  }
+  next.phone = saved.phone
+  next.currentAddress = saved.currentAddress
+  next.notes = saved.notes
+  next.voterStatus = saved.voterStatus
+  next._overridden = true
+  next.enriched = Boolean(
+    next.phone || next.currentAddress || next.notes || next.voterStatus || next._overridden,
+  )
+  return next
+}
+
 export function VoterDataProvider({ children }) {
   const [voters, setVoters] = useState([])
   const [meta, setMeta] = useState({})
   const [dataSource, setDataSource] = useState('')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [dbLive, setDbLive] = useState(false)
   const [q, setQ] = useState('')
   const [part, setPart] = useState('')
   const [sectionNo, setSectionNo] = useState('')
@@ -62,6 +99,30 @@ export function VoterDataProvider({ children }) {
       try {
         setLoading(true)
         setError('')
+
+        const health = await checkEnrichmentApi()
+        if (!alive) return
+        if (health.db) {
+          try {
+            let remote = await fetchEnrichmentMap()
+            const local = loadEnrichmentMap()
+            const localCount = Object.keys(local).length
+            const remoteCount = Object.keys(remote).length
+            // First deploy: push browser enrichment into Postgres once.
+            if (remoteCount === 0 && localCount > 0) {
+              await importEnrichmentMap(local)
+              remote = await fetchEnrichmentMap()
+            }
+            replaceEnrichmentMap(remote)
+            setDbLive(true)
+          } catch (e) {
+            console.warn('enrichment sync failed, using local cache', e)
+            setDbLive(false)
+          }
+        } else {
+          setDbLive(false)
+        }
+
         const { voters: rows, meta: m, sourceLabel } = await loadBestVoters()
         if (!alive) return
         applyLoaded(rows, m, sourceLabel)
@@ -78,6 +139,29 @@ export function VoterDataProvider({ children }) {
       alive = false
     }
   }, [applyLoaded])
+
+  useEffect(() => {
+    if (!dbLive) return undefined
+    return subscribeEnrichmentEvents({
+      onEnrichment: ({ epic, row }) => {
+        if (!epic || !row) return
+        const key = String(epic).toUpperCase()
+        mergeEnrichmentRow(key, row)
+        setVoters((prev) => prev.map((v) => (v.epic === key ? applyRowToVoter(v, row) : v)))
+        setSelectedVoter((cur) => (cur && cur.epic === key ? applyRowToVoter(cur, row) : cur))
+      },
+      onReload: async () => {
+        try {
+          const remote = await fetchEnrichmentMap()
+          replaceEnrichmentMap(remote)
+          const { voters: rows, meta: m, sourceLabel } = await loadBestVoters()
+          applyLoaded(rows, m, sourceLabel)
+        } catch (e) {
+          console.warn('enrichment reload failed', e)
+        }
+      },
+    })
+  }, [dbLive, applyLoaded])
 
   const schedulePersistWorkingCopy = useCallback((nextVoters, nextMeta) => {
     if (persistTimer.current) clearTimeout(persistTimer.current)
@@ -144,51 +228,17 @@ export function VoterDataProvider({ children }) {
       const key = String(epic).toUpperCase()
       const saved = setEnrichment(epic, patch)
       setVoters((prev) => {
-        const nextVoters = prev.map((v) => {
-          if (v.epic !== key) return v
-          const next = { ...v }
-          if (saved.name) next.name = saved.name
-          if (saved.relationType) next.relationType = saved.relationType
-          if (saved.relationName) next.relationName = saved.relationName
-          if (saved.house) next.house = saved.house
-          if (saved.gender) next.gender = saved.gender
-          if (saved.age != null) {
-            next.age = saved.age
-            next.ageBand = computeAgeBand(saved.age)
-          }
-          next.phone = saved.phone
-          next.currentAddress = saved.currentAddress
-          next.notes = saved.notes
-          next.voterStatus = saved.voterStatus
-          next._overridden = true
-          next.enriched = Boolean(
-            next.phone || next.currentAddress || next.notes || next.voterStatus || next._overridden,
-          )
-          return next
-        })
+        const nextVoters = prev.map((v) => (v.epic === key ? applyRowToVoter(v, saved) : v))
         schedulePersistWorkingCopy(nextVoters, metaRef.current)
         return nextVoters
       })
-      setSelectedVoter((cur) => {
-        if (!cur || cur.epic !== key) return cur
-        const next = { ...cur }
-        if (saved.name) next.name = saved.name
-        if (saved.relationType) next.relationType = saved.relationType
-        if (saved.relationName) next.relationName = saved.relationName
-        if (saved.house) next.house = saved.house
-        if (saved.gender) next.gender = saved.gender
-        if (saved.age != null) {
-          next.age = saved.age
-          next.ageBand = computeAgeBand(saved.age)
-        }
-        next.phone = saved.phone
-        next.currentAddress = saved.currentAddress
-        next.notes = saved.notes
-        next.voterStatus = saved.voterStatus
-        next._overridden = true
-        next.enriched = true
-        return next
-      })
+      setSelectedVoter((cur) => (cur && cur.epic === key ? applyRowToVoter(cur, saved) : cur))
+
+      if (isEnrichmentApiAvailable()) {
+        putEnrichment(key, saved).catch((err) => {
+          console.warn('Failed to persist enrichment to Postgres', err)
+        })
+      }
       return saved
     },
     [schedulePersistWorkingCopy],
@@ -325,6 +375,7 @@ export function VoterDataProvider({ children }) {
       filteredFamilies,
       loading,
       error,
+      dbLive,
       filters: {
         q,
         part,
@@ -377,6 +428,7 @@ export function VoterDataProvider({ children }) {
       filteredFamilies,
       loading,
       error,
+      dbLive,
       q,
       part,
       sectionNo,

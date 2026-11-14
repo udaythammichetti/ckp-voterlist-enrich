@@ -201,8 +201,8 @@ export function isEnriched(row) {
  * Empty override string means "keep original" for roll identity fields;
  * phone/address/notes/status may clear to empty when explicitly saved.
  */
-export function applyEnrichment(voters) {
-  const map = loadEnrichmentMap()
+export function applyEnrichment(voters, mapOverride = null) {
+  const map = mapOverride && typeof mapOverride === 'object' ? mapOverride : loadEnrichmentMap()
   return voters.map((v) => {
     const extra = coerceRow(map[String(v.epic || '').toUpperCase()] || {})
     const overridden = {}
@@ -231,6 +231,28 @@ export function applyEnrichment(voters) {
     const _overridden = hasOverride(extra)
     return { ...merged, enriched: isEnriched(merged) || _overridden, _overridden }
   })
+}
+
+/** Merge one remote row into localStorage map (keeps offline cache in sync). */
+export function mergeEnrichmentRow(epic, row) {
+  if (!epic) return loadEnrichmentMap()
+  const key = String(epic).toUpperCase()
+  const map = loadEnrichmentMap()
+  map[key] = coerceRow(row || {})
+  saveEnrichmentMap(map)
+  return map
+}
+
+export function replaceEnrichmentMap(map) {
+  const next = {}
+  if (map && typeof map === 'object') {
+    for (const [epic, row] of Object.entries(map)) {
+      if (!epic) continue
+      next[String(epic).toUpperCase()] = coerceRow(row || {})
+    }
+  }
+  saveEnrichmentMap(next)
+  return next
 }
 
 export function enrichmentStats(voters) {

@@ -67,6 +67,11 @@
   text-overflow: ellipsis;
 }
 
+.db-live {
+  color: #8fd9bf;
+  font-weight: 700;
+}
+
 .topbar-right {
   display: flex;
   flex-wrap: wrap;

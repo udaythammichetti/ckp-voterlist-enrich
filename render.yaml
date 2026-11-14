@@ -1,20 +1,24 @@
-# Render Blueprint — Static Site for the Vite React app
-# Dashboard: New → Blueprint → connect this GitHub repo
-# Or: New → Static Site → Root Directory: web
+# Render Blueprint: Web Service + Postgres
+# New → Blueprint → connect GitHub repo udaythammichetti/ckp-voterlist-enrich
+
+databases:
+  - name: ckp-voterlist-db
+    plan: free
 
 services:
   - type: web
     name: ckp-voterlist-enrich
-    runtime: static
+    runtime: node
     rootDir: web
+    plan: free
     buildCommand: npm ci --include=dev && npm run build
-    staticPublishPath: ./dist
+    startCommand: npm run start
     envVars:
       - key: NODE_VERSION
         value: "20"
       - key: NPM_CONFIG_PRODUCTION
         value: "false"
-    routes:
-      - type: rewrite
-        source: /*
-        destination: /index.html
+      - key: DATABASE_URL
+        fromDatabase:
+          name: ckp-voterlist-db
+          property: connectionString

@@ -7,7 +7,7 @@ React + Vite dashboard for **Sarpanch Elections Chukkavaripalli** (2026 voter li
 - Dashboard KPIs, age / household mix
 - **Ward-wise** and **village / habitation** directories
 - **Family hierarchy** (house + relation linking)
-- Voter detail: add **phone number** and **current address** (saved in browser `localStorage`)
+- Voter detail: phone / address / status / notes — **Postgres on Render**, live across users (SSE)
 - EN | తెలుగు toggle (UI labels + original Telugu names from PDF)
 
 ## Quick start
@@ -23,24 +23,35 @@ npm run dev
 
 App: http://localhost:5173
 
-## Deploy on Render (static site)
+## Deploy on Render (Web Service + Postgres)
 
-1. Push this repo to GitHub (already: `udaythammichetti/ckp-voterlist-enrich`).
-2. In [Render](https://dashboard.render.com): **New** → **Blueprint** → select the repo  
-   (uses `render.yaml`), **or** **New** → **Static Site** with:
-   - **Root Directory:** `web`
-   - **Build Command:** `npm ci && npm run build`
-   - **Publish Directory:** `dist`
-3. Add rewrite: `/*` → `/index.html` (SPA routes).
+Enrichment (phone / status / address / notes) is stored in **Render Postgres** and synced live across users.
 
-**Note:** Phone / address / status still save in the browser. **Save version** to the project folder is a local Vite-dev feature and is not available on the static Render host.
+1. Push this repo to GitHub: `udaythammichetti/ckp-voterlist-enrich`
+2. [Render](https://dashboard.render.com) → **New** → **Blueprint** → select the repo (`render.yaml`)
+3. Approve **Web Service** + **Postgres** (`ckp-voterlist-db`)
+4. After deploy, header shows **Live DB** when Postgres is connected
+
+### Manual Web Service parameters
+
+| Field | Value |
+|---|---|
+| Root Directory | `web` |
+| Runtime | Node |
+| Build Command | `npm ci --include=dev && npm run build` |
+| Start Command | `npm run start` |
+| `NODE_VERSION` | `20` |
+| `NPM_CONFIG_PRODUCTION` | `false` |
+| `DATABASE_URL` | from Render Postgres (auto if Blueprint) |
+
+Local Vite (`npm run dev`) still uses browser storage when `/api` is unavailable.
 
 ## Data
 
 - Source PDF: `vedagirivaripalle 2026voterlist.pdf`
 - Extracted JSON: `web/public/data/voters.json` (1,141 electors, English transliteration)
 - Photos: `web/public/photos/{EPIC}.jpg` (mapped from PDF cards · ~1,140)
-- Enrichment (phone / address / status / notes) is per-browser, keyed by voter ID
+- Enrichment (phone / address / status / notes): Postgres when `DATABASE_URL` is set; otherwise browser `localStorage`
 
 ```bash
 python3 scripts/extract_photos.py   # re-map photos from PDF
@@ -50,7 +61,8 @@ python3 scripts/extract_photos.py   # re-map photos from PDF
 
 ```
 scripts/extract_voters.py   PDF → English JSON
-web/                        Vite React app
+web/                        Vite React app + Express API
+  server/                   Postgres enrichment API + SSE + static host
   public/data/voters.json
-  src/pages/                Dashboard, Voters, Wards, Villages, Families
+  src/pages/                Dashboard, Campaign, Voters, Wards, Villages, Families, Consolidated
 ```
