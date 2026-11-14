@@ -69,53 +69,55 @@ export default function Shell() {
   return (
     <div className="app-shell">
       <header className="topbar">
-        <div className="brand-block">
-          <Link to="/" className="brand-home" aria-label="Home dashboard">
-            <p className="brand-kicker">Sarpanch 2026</p>
-            <p className="brand-mark">Chukkavaripalli</p>
-          </Link>
-          <p className="brand-sub">
-            {!loading ? `${voters.length.toLocaleString()} electors` : 'Loading…'}
-            {dbLive ? <span className="db-live"> · Live DB</span> : null}
-          </p>
-        </div>
-        <div className="topbar-right">
-          <div className="lang-toggle" role="group" aria-label="Language">
-            <button
-              type="button"
-              className={lang === 'en' ? 'is-active' : ''}
-              onClick={() => setLanguage('en')}
-            >
-              EN
-            </button>
-            <button
-              type="button"
-              className={lang === 'te' ? 'is-active' : ''}
-              onClick={() => setLanguage('te')}
-            >
-              తెలుగు
-            </button>
+        <div className="topbar-row">
+          <div className="brand-block">
+            <Link to="/" className="brand-home" aria-label="Home dashboard">
+              <p className="brand-kicker">Sarpanch 2026</p>
+              <p className="brand-mark">Chukkavaripalli</p>
+            </Link>
+            <p className="brand-sub">
+              {!loading ? `${voters.length.toLocaleString()} electors` : 'Loading…'}
+              {dbLive ? <span className="db-live"> · Live DB</span> : null}
+            </p>
           </div>
-          <nav ref={navRef} className="nav-links" aria-label="Primary">
-            {links.map((l) => {
-              const active = pathMatches(l.to, pathname, l.end)
-              return (
-                <NavLink
-                  key={l.to}
-                  to={l.to}
-                  end={l.end}
-                  className={() => (active ? 'nav active' : 'nav')}
-                  aria-current={active ? 'page' : undefined}
-                >
-                  {t(l.label)}
-                </NavLink>
-              )
-            })}
-          </nav>
-          <a className="logout-link" href="/logout">
-            Logout
-          </a>
+          <div className="topbar-tools">
+            <div className="lang-toggle" role="group" aria-label="Language">
+              <button
+                type="button"
+                className={lang === 'en' ? 'is-active' : ''}
+                onClick={() => setLanguage('en')}
+              >
+                EN
+              </button>
+              <button
+                type="button"
+                className={lang === 'te' ? 'is-active' : ''}
+                onClick={() => setLanguage('te')}
+              >
+                తెలుగు
+              </button>
+            </div>
+            <a className="logout-link" href="/logout">
+              Logout
+            </a>
+          </div>
         </div>
+        <nav ref={navRef} className="nav-links" aria-label="Primary">
+          {links.map((l) => {
+            const active = pathMatches(l.to, pathname, l.end)
+            return (
+              <NavLink
+                key={l.to}
+                to={l.to}
+                end={l.end}
+                className={() => (active ? 'nav active' : 'nav')}
+                aria-current={active ? 'page' : undefined}
+              >
+                {t(l.label)}
+              </NavLink>
+            )
+          })}
+        </nav>
       </header>
       <p className="print-only print-banner">
         Chukkavaripalli · {lang === 'te' ? 'తెలుగు' : 'English'} · {t(titleForPath(pathname))}

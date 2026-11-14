@@ -17,10 +17,10 @@
 
 .topbar {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.85rem;
-  padding: 0.5rem 0 0.65rem;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.55rem;
+  padding: 0.55rem 0 0.7rem;
   border-bottom: 1px solid var(--line);
   margin-bottom: 0.85rem;
   position: sticky;
@@ -31,10 +31,17 @@
   min-width: 0;
 }
 
+.topbar-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
 .brand-block {
   min-width: 0;
-  flex: 0 1 auto;
-  max-width: min(100%, 18rem);
+  flex: 1 1 auto;
 }
 
 .brand-home {
@@ -87,14 +94,12 @@
   font-weight: 700;
 }
 
-.topbar-right {
-  display: flex;
-  flex-wrap: wrap;
+.topbar-tools {
+  display: inline-flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 0.5rem;
-  min-width: 0;
-  flex: 1 1 auto;
+  gap: 0.45rem;
+  flex: 0 0 auto;
 }
 
 .logout-link {
@@ -104,12 +109,13 @@
   text-decoration: none;
   border: 1px solid var(--line);
   border-radius: 999px;
-  padding: 0.32rem 0.7rem;
-  min-height: 2.2rem;
+  padding: 0 0.85rem;
+  height: 2.35rem;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   flex: 0 0 auto;
-  margin-left: auto;
+  line-height: 1;
 }
 
 .logout-link:hover {
@@ -121,10 +127,12 @@
 
 .lang-toggle {
   display: inline-flex;
+  align-items: stretch;
   border: 1px solid var(--line);
   border-radius: 999px;
   overflow: hidden;
   background: rgba(11, 20, 16, 0.55);
+  height: 2.35rem;
 }
 
 .lang-toggle button {
@@ -135,8 +143,12 @@
   font: inherit;
   font-size: 0.78rem;
   font-weight: 700;
-  padding: 0.32rem 0.7rem;
+  padding: 0 0.85rem;
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
 }
 
 .lang-toggle button.is-active {
@@ -297,15 +309,17 @@
 .nav-links {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.28rem;
+  gap: 0.3rem;
   max-width: 100%;
-  justify-content: flex-end;
+  justify-content: flex-start;
+  align-items: center;
   min-width: 0;
 }
 
 .nav {
   color: var(--muted);
-  padding: 0.3rem 0.58rem;
+  padding: 0 0.72rem;
+  height: 2.2rem;
   border-radius: 999px;
   text-decoration: none;
   border: 1px solid transparent;
@@ -313,6 +327,10 @@
   font-weight: 600;
   white-space: nowrap;
   flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
   transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
 }
 
@@ -2418,8 +2436,7 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .hero-panel,
-  .topbar {
+  .hero-panel {
     flex-direction: column;
     align-items: stretch;
   }
@@ -2428,43 +2445,25 @@
     max-width: 100%;
   }
 
-  .topbar-right {
-    width: 100%;
-    flex-direction: row;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: flex-start;
-    gap: 0.55rem;
+  .topbar-row {
+    align-items: flex-start;
   }
 
-  .lang-toggle {
-    order: 1;
-  }
-
-  .nav-links {
-    order: 3;
-    flex: 1 1 100%;
-  }
-
-  .logout-link {
-    order: 2;
-    margin-left: auto;
+  .topbar-tools {
+    padding-top: 0.15rem;
   }
 
   .nav-links {
     width: 100%;
-    justify-content: flex-start;
     flex-wrap: nowrap;
     overflow-x: auto;
     overscroll-behavior-x: contain;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
-    max-width: 100%;
-    padding: 0.1rem 0.15rem 0.25rem;
+    padding: 0.05rem 0.1rem 0.2rem;
     gap: 0.35rem;
     scroll-snap-type: x proximity;
-    /* Fade both edges so last tabs stay reachable */
-    mask-image: linear-gradient(90deg, transparent, #000 12px, #000 calc(100% - 12px), transparent);
+    mask-image: linear-gradient(90deg, transparent, #000 10px, #000 calc(100% - 10px), transparent);
   }
 
   .nav-links::-webkit-scrollbar {
@@ -2472,17 +2471,19 @@
   }
 
   .nav {
-    padding: 0.5rem 0.85rem;
-    font-size: 0.88rem;
-    min-height: 2.6rem;
-    display: inline-flex;
-    align-items: center;
+    height: 2.45rem;
+    padding: 0 0.85rem;
+    font-size: 0.86rem;
     scroll-snap-align: center;
   }
 
+  .lang-toggle,
+  .logout-link {
+    height: 2.45rem;
+  }
+
   .lang-toggle button {
-    min-height: 2.5rem;
-    padding: 0.4rem 0.85rem;
+    padding: 0 0.85rem;
   }
 
   .brand-sub {
