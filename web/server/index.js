@@ -1,4 +1,5 @@
 import express from 'express'
+import { existsSync, readFileSync } from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import {
@@ -243,10 +244,46 @@ app.get('/{*spa}', (req, res, next) => {
   })
 })
 
+async function seedContactsPatch() {
+  if (!hasDatabase()) return
+  const candidates = [
+    path.join(dist, 'data/enrichment_contacts_patch.json'),
+    path.join(root, 'public/data/enrichment_contacts_patch.json'),
+  ]
+  let file = null
+  for (const p of candidates) {
+    try {
+      if (existsSync(p)) {
+        file = JSON.parse(readFileSync(p, 'utf8'))
+        break
+      }
+    } catch {
+      /* try next */
+    }
+  }
+  const map = file?.map
+  if (!map || typeof map !== 'object') {
+    console.warn('[db] contacts patch not found — skip phone seed')
+    return
+  }
+  let applied = 0
+  for (const [epic, row] of Object.entries(map)) {
+    if (!epic || !row || typeof row !== 'object') continue
+    const patch = {}
+    if (row.phone) patch.phone = String(row.phone)
+    if (row.currentAddress) patch.currentAddress = String(row.currentAddress)
+    if (!Object.keys(patch).length) continue
+    await upsertEnrichment(epic, patch)
+    applied += 1
+  }
+  console.log(`[db] seeded contact phones/addresses: ${applied}`)
+}
+
 async function main() {
   if (hasDatabase()) {
     await migrateWithRetry()
     console.log('[db] migrated voter_enrichment')
+    await seedContactsPatch()
   } else {
     console.warn('[db] DATABASE_URL not set — API enrichment disabled')
   }

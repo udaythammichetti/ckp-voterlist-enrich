@@ -217,14 +217,14 @@ export function applyEnrichment(voters, mapOverride = null) {
       overridden.ageBand = computeAgeBand(extra.age)
     }
 
-    // Contact fields: if epic has any saved enrichment row, prefer saved values
-    // (including blanks) only when the key exists in storage with updates.
+    // Contact fields: prefer non-empty enrichment; do not wipe roll phones/addresses
+    // with blank enrichment rows (e.g. status-only saves).
     const hasSaved = Boolean(map[String(v.epic || '').toUpperCase()])
     if (hasSaved) {
-      overridden.phone = extra.phone
-      overridden.currentAddress = extra.currentAddress
-      overridden.notes = extra.notes
-      overridden.voterStatus = extra.voterStatus
+      overridden.phone = extra.phone || v.phone || ''
+      overridden.currentAddress = extra.currentAddress || v.currentAddress || ''
+      overridden.notes = extra.notes || v.notes || ''
+      overridden.voterStatus = extra.voterStatus || v.voterStatus || ''
     }
 
     const merged = { ...v, ...overridden }
