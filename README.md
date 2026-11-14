@@ -42,7 +42,21 @@ Enrichment (phone / status / address / notes) is stored in **Render Postgres** a
 | Start Command | `npm run start` |
 | `NODE_VERSION` | `20` |
 | `NPM_CONFIG_PRODUCTION` | `false` |
-| `DATABASE_URL` | from Render Postgres (auto if Blueprint) |
+| `DATABASE_URL` | from Render Postgres (Internal URL) |
+| `AUTH_USER` | your login username |
+| `AUTH_PASSWORD` | your login password |
+
+### Login (username / password)
+
+1. Web Service → **Environment**
+2. Add:
+   - `AUTH_USER` = e.g. `ckp`
+   - `AUTH_PASSWORD` = a strong password
+3. **Save** → redeploy
+4. Open the site → you get a **Sign in** page
+5. Use **Logout** in the header when done
+
+If `AUTH_USER` / `AUTH_PASSWORD` are missing, the site stays open (local/dev). `/api/health` stays public for Render health checks.
 
 Local Vite (`npm run dev`) still uses browser storage when `/api` is unavailable.
 

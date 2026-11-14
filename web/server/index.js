@@ -2,6 +2,15 @@ import express from 'express'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import {
+  authEnabled,
+  checkCredentials,
+  clearSessionCookie,
+  createSessionToken,
+  isAuthenticated,
+  loginPageHtml,
+  setSessionCookie,
+} from './auth.js'
+import {
   databaseHostInfo,
   enrichmentCount,
   getEnrichment,
@@ -23,6 +32,7 @@ const app = express()
 app.disable('x-powered-by')
 app.set('trust proxy', 1)
 app.use(express.json({ limit: '4mb' }))
+app.use(express.urlencoded({ extended: false }))
 
 /** @type {Set<import('express').Response>} */
 const sseClients = new Set()
@@ -71,6 +81,21 @@ async function migrateWithRetry(attempts = 15) {
   throw lastErr || new Error('Database migrate failed')
 }
 
+function wantsHtml(req) {
+  const accept = String(req.headers.accept || '')
+  return accept.includes('text/html') || req.method === 'GET'
+}
+
+function requireAuth(req, res, next) {
+  if (!authEnabled() || isAuthenticated(req)) return next()
+  if (req.path.startsWith('/api/')) {
+    return res.status(401).json({ error: 'Sign in required' })
+  }
+  const nextUrl = req.originalUrl || '/'
+  return res.redirect(302, `/login?next=${encodeURIComponent(nextUrl)}`)
+}
+
+// Public health for Render (no auth).
 app.get('/api/health', async (_req, res) => {
   let dbOk = false
   let count = 0
@@ -86,8 +111,52 @@ app.get('/api/health', async (_req, res) => {
       error: err.message || 'db error',
     })
   }
-  res.json({ ok: true, db: dbOk, enrichmentCount: count })
+  res.json({
+    ok: true,
+    db: dbOk,
+    enrichmentCount: count,
+    auth: authEnabled(),
+  })
 })
+
+app.get('/login', (req, res) => {
+  if (!authEnabled()) return res.redirect('/')
+  if (isAuthenticated(req)) return res.redirect('/')
+  const next = typeof req.query.next === 'string' ? req.query.next : '/'
+  res.type('html').send(loginPageHtml({ next }))
+})
+
+app.post('/login', (req, res) => {
+  if (!authEnabled()) return res.redirect('/')
+  const username = String(req.body?.username || '')
+  const password = String(req.body?.password || '')
+  const nextRaw = String(req.body?.next || '/')
+  const next = nextRaw.startsWith('/') ? nextRaw : '/'
+
+  if (!checkCredentials(username, password)) {
+    return res
+      .status(401)
+      .type('html')
+      .send(loginPageHtml({ error: 'Invalid username or password', next }))
+  }
+
+  setSessionCookie(res, createSessionToken(username))
+  return res.redirect(302, next)
+})
+
+app.post('/logout', (req, res) => {
+  clearSessionCookie(res)
+  if (wantsHtml(req)) return res.redirect('/login')
+  return res.json({ ok: true })
+})
+
+app.get('/logout', (_req, res) => {
+  clearSessionCookie(res)
+  res.redirect('/login')
+})
+
+// Everything below requires auth when AUTH_USER + AUTH_PASSWORD are set.
+app.use(requireAuth)
 
 app.get('/api/enrichment', async (_req, res) => {
   try {
@@ -99,7 +168,6 @@ app.get('/api/enrichment', async (_req, res) => {
   }
 })
 
-// Named path before :epic so "import" is never treated as an EPIC id.
 app.post('/api/enrichment/import', async (req, res) => {
   try {
     if (!hasDatabase()) return res.status(503).json({ error: 'DATABASE_URL missing' })
@@ -142,7 +210,6 @@ app.get('/api/events', (req, res) => {
   res.setHeader('X-Accel-Buffering', 'no')
   if (typeof res.flushHeaders === 'function') res.flushHeaders()
 
-  // Keep SSE alive behind Render / proxies
   req.socket.setTimeout(0)
   req.socket.setNoDelay?.(true)
   req.socket.setKeepAlive?.(true)
@@ -169,7 +236,6 @@ app.get('/api/events', (req, res) => {
 
 app.use(express.static(dist, { index: false, maxAge: '1h' }))
 
-// Express 5 path-to-regexp requires a named splat (bare "*" crashes on boot).
 app.get('/{*spa}', (req, res, next) => {
   if (req.path.startsWith('/api/')) return next()
   res.sendFile(path.join(dist, 'index.html'), (err) => {
@@ -183,6 +249,12 @@ async function main() {
     console.log('[db] migrated voter_enrichment')
   } else {
     console.warn('[db] DATABASE_URL not set — API enrichment disabled')
+  }
+
+  if (authEnabled()) {
+    console.log('[auth] login required (AUTH_USER / AUTH_PASSWORD)')
+  } else {
+    console.warn('[auth] AUTH_USER/AUTH_PASSWORD not set — site is open')
   }
 
   app.listen(port, '0.0.0.0', () => {
