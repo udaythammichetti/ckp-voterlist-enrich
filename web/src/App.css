@@ -2,7 +2,7 @@
   width: 100%;
   max-width: 100%;
   margin: 0;
-  padding: 0.65rem clamp(0.6rem, 1.2vw, 1.25rem) 1.25rem;
+  padding: 0.5rem clamp(0.55rem, 1vw, 1rem) 1rem;
   min-height: 100dvh;
   display: flex;
   flex-direction: column;
@@ -19,10 +19,10 @@
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  gap: 0.7rem;
-  padding: 0.6rem 0 0;
+  gap: 0.45rem;
+  padding: 0.35rem 0 0;
   border-bottom: 1px solid var(--line);
-  margin-bottom: 0.95rem;
+  margin-bottom: 0.75rem;
   position: sticky;
   top: 0;
   z-index: 20;
@@ -35,9 +35,9 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 0.85rem;
+  gap: 0.65rem;
   min-width: 0;
-  padding-bottom: 0.15rem;
+  padding-bottom: 0;
 }
 
 .brand-block {
@@ -60,10 +60,10 @@
 }
 
 .brand-kicker {
-  margin: 0 0 0.1rem;
-  font-size: 0.68rem;
+  margin: 0 0 0.05rem;
+  font-size: 0.6rem;
   font-weight: 700;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--accent);
 }
@@ -71,18 +71,18 @@
 .brand-mark {
   margin: 0;
   font-family: 'Bricolage Grotesque', Figtree, sans-serif;
-  font-size: clamp(1.2rem, 1.9vw, 1.65rem);
+  font-size: clamp(1.02rem, 1.5vw, 1.28rem);
   font-weight: 800;
   color: var(--text);
-  line-height: 1.05;
-  letter-spacing: -0.03em;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
   transition: color 0.15s ease;
 }
 
 .brand-sub {
-  margin: 0.15rem 0 0;
+  margin: 0.1rem 0 0;
   color: var(--muted);
-  font-size: 0.78rem;
+  font-size: 0.7rem;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
@@ -105,14 +105,14 @@
 
 .logout-link {
   color: var(--muted);
-  font-size: 0.75rem;
+  font-size: 0.68rem;
   font-weight: 700;
   letter-spacing: 0.02em;
   text-decoration: none;
   border: 1px solid transparent;
-  border-radius: 8px;
-  padding: 0 0.65rem;
-  height: 2rem;
+  border-radius: 7px;
+  padding: 0 0.55rem;
+  height: 1.85rem;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -130,11 +130,11 @@
   display: inline-grid;
   grid-template-columns: 1fr 1fr;
   border: 1px solid var(--line);
-  border-radius: 8px;
+  border-radius: 7px;
   overflow: hidden;
   background: rgba(0, 0, 0, 0.22);
-  height: 2rem;
-  min-width: 6.6rem;
+  height: 1.85rem;
+  min-width: 5.6rem;
 }
 
 .lang-toggle button {
@@ -143,9 +143,9 @@
   background: transparent;
   color: var(--muted);
   font: inherit;
-  font-size: 0.72rem;
+  font-size: 0.66rem;
   font-weight: 750;
-  padding: 0 0.55rem;
+  padding: 0 0.45rem;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
@@ -335,7 +335,7 @@
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
   border: 1px solid var(--line);
-  border-radius: 12px;
+  border-radius: 10px;
   background: rgba(0, 0, 0, 0.18);
 }
 
@@ -345,13 +345,13 @@
 
 .nav {
   color: var(--muted);
-  padding: 0 0.95rem;
-  height: 2.55rem;
+  padding: 0 0.72rem;
+  height: 2.15rem;
   border-radius: 0;
   text-decoration: none;
   border: 0;
   border-right: 1px solid rgba(154, 173, 161, 0.12);
-  font-size: 0.84rem;
+  font-size: 0.74rem;
   font-weight: 650;
   white-space: nowrap;
   flex: 1 0 auto;
@@ -428,9 +428,9 @@
 }
 
 .hero-panel h1 {
-  margin: 0.15rem 0 0.4rem;
-  font-size: clamp(1.45rem, 2.6vw, 2.15rem);
-  line-height: 1.12;
+  margin: 0.1rem 0 0.3rem;
+  font-size: clamp(1.2rem, 2.1vw, 1.75rem);
+  line-height: 1.15;
 }
 
 .hero-stats {
@@ -633,7 +633,7 @@
   margin: 0;
   max-width: 70ch;
   color: var(--muted);
-  font-size: 0.9rem;
+  font-size: 0.84rem;
 }
 
 .hero-actions,
@@ -650,7 +650,7 @@
 
 .page-head h1 {
   margin: 0;
-  font-size: clamp(1.35rem, 2vw, 1.7rem);
+  font-size: clamp(1.15rem, 1.7vw, 1.4rem);
 }
 
 .voters-head {
@@ -2496,7 +2496,7 @@
   }
 
   .topbar {
-    gap: 0.6rem;
+    gap: 0.4rem;
   }
 
   .topbar-row {
@@ -2504,7 +2504,17 @@
   }
 
   .lang-toggle {
-    min-width: 5.2rem;
+    min-width: 4.6rem;
+    height: 2rem;
+  }
+
+  .logout-link {
+    height: 2rem;
+    font-size: 0.66rem;
+  }
+
+  .lang-toggle button {
+    font-size: 0.66rem;
   }
 
   .lang-full {
@@ -2521,13 +2531,14 @@
 
   .nav-links {
     scroll-snap-type: x proximity;
+    border-radius: 9px;
     mask-image: linear-gradient(90deg, transparent, #000 8px, #000 calc(100% - 8px), transparent);
   }
 
   .nav {
-    height: 2.65rem;
-    padding: 0 0.8rem;
-    font-size: 0.8rem;
+    height: 2.35rem;
+    padding: 0 0.65rem;
+    font-size: 0.72rem;
     flex: 0 0 auto;
     scroll-snap-align: center;
   }
@@ -2540,7 +2551,16 @@
     display: inline;
   }
 
+  .brand-kicker {
+    font-size: 0.56rem;
+  }
+
+  .brand-mark {
+    font-size: 1.05rem;
+  }
+
   .brand-sub {
+    font-size: 0.66rem;
     white-space: normal;
     max-width: 100%;
   }
@@ -2643,25 +2663,28 @@
   }
 
   .app-shell {
-    padding: 0.55rem 0.65rem calc(1.1rem + env(safe-area-inset-bottom));
+    padding: 0.45rem 0.55rem calc(0.95rem + env(safe-area-inset-bottom));
   }
 
   .topbar {
-    margin-bottom: 0.65rem;
-    padding-bottom: 0.5rem;
+    margin-bottom: 0.55rem;
   }
 
   .brand-mark {
-    font-size: 1.28rem;
+    font-size: 1rem;
   }
 
   .hero-panel {
-    padding: 0.95rem 0.9rem;
-    border-radius: 14px;
+    padding: 0.8rem 0.75rem;
+    border-radius: 12px;
   }
 
   .page-head h1 {
-    font-size: 1.35rem;
+    font-size: 1.15rem;
+  }
+
+  .page-head .lede {
+    font-size: 0.82rem;
   }
 
   .chart-box {
