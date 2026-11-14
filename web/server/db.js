@@ -5,20 +5,73 @@ const { Pool } = pg
 let pool = null
 
 export function hasDatabase() {
-  return Boolean(process.env.DATABASE_URL)
+  return Boolean(process.env.DATABASE_URL?.trim())
+}
+
+/** Safe host log (no password). */
+export function databaseHostInfo() {
+  const raw = process.env.DATABASE_URL?.trim()
+  if (!raw) return { configured: false }
+  try {
+    const u = new URL(raw)
+    return {
+      configured: true,
+      host: u.hostname,
+      port: u.port || '5432',
+      database: u.pathname?.replace(/^\//, '') || '',
+      ssl: shouldUseSsl(raw),
+      likelyInternal: !u.hostname.includes('render.com'),
+    }
+  } catch {
+    return { configured: true, host: '(unparseable)', ssl: true, likelyInternal: false }
+  }
+}
+
+/**
+ * Render Internal URL host has no "render.com" and does not need TLS.
+ * External URL host ends with "*.render.com" and requires TLS.
+ * Override with PGSSL=true|false if needed.
+ */
+function shouldUseSsl(connectionString) {
+  if (process.env.PGSSL === 'false') return false
+  if (process.env.PGSSL === 'true') return true
+  try {
+    const u = new URL(connectionString)
+    const host = u.hostname || ''
+    const sslmode = (u.searchParams.get('sslmode') || '').toLowerCase()
+    if (sslmode === 'disable') return false
+    if (sslmode === 'require' || sslmode === 'verify-ca' || sslmode === 'verify-full') return true
+    // External Render host → SSL. Internal private host → no SSL.
+    if (host.includes('render.com')) return true
+    return false
+  } catch {
+    return true
+  }
+}
+
+export function resetPool() {
+  if (!pool) return
+  const old = pool
+  pool = null
+  old.end().catch(() => {})
 }
 
 export function getPool() {
   if (!hasDatabase()) return null
   if (!pool) {
-    // Render Postgres requires SSL (internal + external URLs).
-    const useSsl = process.env.PGSSL !== 'false'
+    const connectionString = process.env.DATABASE_URL.trim()
+    const useSsl = shouldUseSsl(connectionString)
+    const info = databaseHostInfo()
+    console.log(
+      `[db] connecting host=${info.host} port=${info.port} ssl=${useSsl} internal=${info.likelyInternal}`,
+    )
     pool = new Pool({
-      connectionString: process.env.DATABASE_URL,
+      connectionString,
       ssl: useSsl ? { rejectUnauthorized: false } : false,
       max: 5,
       idleTimeoutMillis: 30000,
-      connectionTimeoutMillis: 15000,
+      connectionTimeoutMillis: 30000,
+      keepAlive: true,
     })
     pool.on('error', (err) => {
       console.error('[db] pool error', err.message || err)
@@ -48,7 +101,6 @@ export async function migrate() {
     CREATE INDEX IF NOT EXISTS voter_enrichment_updated_at_idx
       ON voter_enrichment (updated_at DESC);
   `)
-  // Older deploys may lack age/gender — add safely.
   await db.query(`
     ALTER TABLE voter_enrichment ADD COLUMN IF NOT EXISTS age INTEGER;
     ALTER TABLE voter_enrichment ADD COLUMN IF NOT EXISTS gender TEXT NOT NULL DEFAULT '';

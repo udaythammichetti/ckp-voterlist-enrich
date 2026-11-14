@@ -2,12 +2,14 @@ import express from 'express'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import {
+  databaseHostInfo,
   enrichmentCount,
   getEnrichment,
   hasDatabase,
   importEnrichmentMap,
   listEnrichment,
   migrate,
+  resetPool,
   upsertEnrichment,
 } from './db.js'
 
@@ -35,7 +37,17 @@ function broadcast(event, data) {
   }
 }
 
-async function migrateWithRetry(attempts = 12) {
+async function migrateWithRetry(attempts = 15) {
+  const info = databaseHostInfo()
+  console.log(
+    `[db] migrate start host=${info.host} ssl=${info.ssl} internal=${info.likelyInternal}`,
+  )
+  if (info.configured && !info.likelyInternal) {
+    console.warn(
+      '[db] DATABASE_URL looks EXTERNAL (*.render.com). Prefer Internal Database URL from the Postgres Info page.',
+    )
+  }
+
   let lastErr
   for (let i = 1; i <= attempts; i += 1) {
     try {
@@ -44,7 +56,9 @@ async function migrateWithRetry(attempts = 12) {
     } catch (err) {
       lastErr = err
       console.warn(`[db] migrate attempt ${i}/${attempts} failed:`, err.message || err)
-      await new Promise((r) => setTimeout(r, 2000))
+      resetPool()
+      const waitMs = Math.min(8000, 1500 * i)
+      await new Promise((r) => setTimeout(r, waitMs))
     }
   }
   throw lastErr || new Error('Database migrate failed')
