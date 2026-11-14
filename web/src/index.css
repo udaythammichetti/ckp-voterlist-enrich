@@ -22,6 +22,7 @@
 
 * {
   box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
 }
 
 html,
@@ -36,6 +37,8 @@ body {
   margin: 0;
   min-width: 320px;
   overflow-x: hidden;
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom)
+    env(safe-area-inset-left);
   background:
     radial-gradient(1100px 560px at 8% -12%, rgba(47, 143, 116, 0.28), transparent 55%),
     radial-gradient(900px 480px at 92% -5%, rgba(212, 163, 92, 0.18), transparent 52%),
@@ -54,8 +57,18 @@ a:hover {
 
 button,
 input,
-select {
+select,
+textarea {
   font: inherit;
+}
+
+/* Prevent iOS zoom-on-focus (needs >= 16px). */
+@media (max-width: 860px) {
+  input,
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
 }
 
 h1,

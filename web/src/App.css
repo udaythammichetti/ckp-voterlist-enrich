@@ -2394,10 +2394,35 @@
   .topbar-right {
     width: 100%;
     justify-content: space-between;
+    gap: 0.65rem;
   }
 
   .nav-links {
     justify-content: flex-start;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    max-width: 100%;
+    padding-bottom: 0.15rem;
+    mask-image: linear-gradient(90deg, #000 85%, transparent);
+  }
+
+  .nav-links::-webkit-scrollbar {
+    display: none;
+  }
+
+  .nav {
+    padding: 0.48rem 0.78rem;
+    font-size: 0.86rem;
+    min-height: 2.5rem;
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .lang-toggle button {
+    min-height: 2.5rem;
+    padding: 0.4rem 0.85rem;
   }
 
   .brand-sub {
@@ -2411,6 +2436,87 @@
   .kpi-grid {
     grid-template-columns: 1fr;
   }
+
+  .filters {
+    align-items: stretch;
+  }
+
+  .filters > * {
+    flex: 1 1 100%;
+    min-width: 0;
+  }
+
+  .filters input,
+  .filters select,
+  .filters .ms-root {
+    width: 100%;
+  }
+
+  .toolbar-btn,
+  .ghost-btn,
+  .primary-btn {
+    min-height: 2.6rem;
+  }
+
+  /* Voter detail: full-width bottom sheet for one-handed mobile use */
+  .vd-backdrop {
+    align-items: flex-end;
+    justify-content: stretch;
+  }
+
+  .vd-panel {
+    width: 100%;
+    max-height: min(92dvh, 100%);
+    height: auto;
+    border-left: 0;
+    border-top: 1px solid var(--line);
+    border-radius: 18px 18px 0 0;
+    padding: 0.85rem 0.9rem calc(1.1rem + env(safe-area-inset-bottom));
+    box-shadow: 0 -12px 36px rgba(0, 0, 0, 0.4);
+    animation: vd-sheet 0.22s ease;
+  }
+
+  @keyframes vd-sheet {
+    from {
+      transform: translateY(28px);
+      opacity: 0.7;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+
+  .vd-enrich-actions,
+  .vd-foot {
+    position: sticky;
+    bottom: 0;
+    background: linear-gradient(180deg, transparent, #0e1813 28%);
+    padding-top: 0.65rem;
+    padding-bottom: 0.15rem;
+  }
+
+  .vd-enrich-actions .primary-btn,
+  .vd-foot .primary-btn,
+  .vd-foot .ghost-btn {
+    flex: 1 1 auto;
+    min-height: 2.75rem;
+  }
+
+  .data-menu-panel {
+    right: auto;
+    left: 0;
+    min-width: min(20rem, 92vw);
+  }
+
+  .table-wrap {
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .voter-table th,
+  .voter-table td {
+    padding: 0.55rem 0.45rem;
+  }
 }
 
 @media (max-width: 640px) {
@@ -2422,12 +2528,49 @@
   }
 
   .app-shell {
-    padding: 0.65rem 0.7rem 1.25rem;
+    padding: 0.55rem 0.65rem calc(1.1rem + env(safe-area-inset-bottom));
+  }
+
+  .topbar {
+    margin-bottom: 0.65rem;
+    padding-bottom: 0.5rem;
+  }
+
+  .brand-mark {
+    font-size: 1.28rem;
+  }
+
+  .hero-panel {
+    padding: 0.95rem 0.9rem;
+    border-radius: 14px;
+  }
+
+  .page-head h1 {
+    font-size: 1.35rem;
   }
 
   .chart-box {
     height: 200px;
     min-height: 200px;
+  }
+
+  .quick-actions,
+  .quick-actions-4,
+  .quick-actions-8 {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .campaign-kpi-row,
+  .campaign-kpi-row-5 {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .export-print-bar {
+    width: 100%;
+  }
+
+  .export-print-bar .toolbar-btn {
+    flex: 1 1 auto;
   }
 }
 

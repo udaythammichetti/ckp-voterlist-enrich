@@ -37,6 +37,11 @@ export default function Shell() {
     document.documentElement.lang = lang === 'te' ? 'te' : 'en'
   }, [pathname, lang, t])
 
+  useEffect(() => {
+    const active = document.querySelector('.nav-links .nav.active')
+    active?.scrollIntoView?.({ inline: 'center', block: 'nearest', behavior: 'smooth' })
+  }, [pathname])
+
   return (
     <div className="app-shell">
       <header className="topbar">
