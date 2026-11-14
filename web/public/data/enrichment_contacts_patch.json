@@ -1,0 +1,250 @@
+{
+  "meta": {
+    "type": "enrichment_patch",
+    "source": "contacts_field_sheet.json",
+    "createdAt": "2026-11-14T15:15:45.883523+00:00",
+    "count": 63
+  },
+  "map": {
+    "SQB0300004": {
+      "phone": "9440989335",
+      "currentAddress": "Tirupati"
+    },
+    "SQB0243618": {
+      "phone": "9885112495",
+      "currentAddress": "Tirupati"
+    },
+    "SQB0563081": {
+      "phone": "9441043403",
+      "currentAddress": "Tirupati"
+    },
+    "SQB2115137": {
+      "phone": "6305749383",
+      "currentAddress": "Bengaluru"
+    },
+    "SQB0300053": {
+      "phone": "9440467826",
+      "currentAddress": "Tirupati",
+      "notes": "Raja"
+    },
+    "SQB0703919": {
+      "currentAddress": "Tirupati"
+    },
+    "SQB0243600": {
+      "phone": "9611188877",
+      "currentAddress": "Bengaluru"
+    },
+    "SQB0512393": {
+      "phone": "8523025703",
+      "currentAddress": "Bengaluru"
+    },
+    "SQB0570649": {
+      "phone": "9573122244",
+      "currentAddress": "Tirupati"
+    },
+    "SQB0879353": {
+      "phone": "9573122244",
+      "currentAddress": "Tirupati"
+    },
+    "SQB0706426": {
+      "phone": "8790902631"
+    },
+    "SQB2187995": {
+      "phone": "8341700266",
+      "currentAddress": "Bengaluru"
+    },
+    "SQB2121895": {
+      "phone": "8050494151",
+      "currentAddress": "Bengaluru"
+    },
+    "SQB0740994": {
+      "phone": "9000696922",
+      "currentAddress": "Bengaluru"
+    },
+    "SQB0883033": {
+      "phone": "9989000250",
+      "currentAddress": "Bengaluru"
+    },
+    "SQB1984319": {
+      "phone": "7569510950",
+      "currentAddress": "Hyderabad"
+    },
+    "SQB0570706": {
+      "phone": "8105292409",
+      "currentAddress": "Bengaluru"
+    },
+    "BDG2946523": {
+      "phone": "9820685358",
+      "currentAddress": "Bengaluru"
+    },
+    "SQB0752809": {
+      "phone": "9632383109",
+      "currentAddress": "Bengaluru"
+    },
+    "SQB2153039": {
+      "phone": "9945184632",
+      "currentAddress": "Bengaluru"
+    },
+    "SQB0704024": {
+      "phone": "9573824623",
+      "currentAddress": "Tirupati"
+    },
+    "SQB0706384": {
+      "phone": "9949777224",
+      "currentAddress": "Tirupati"
+    },
+    "SQB2036143": {
+      "phone": "9702518371",
+      "currentAddress": "Tirupati"
+    },
+    "SQB0769655": {
+      "currentAddress": "Tirupati"
+    },
+    "SQB1918077": {
+      "phone": "7093096528",
+      "currentAddress": "Tirupati"
+    },
+    "SQB0391847": {
+      "phone": "9391678012",
+      "currentAddress": "Bengaluru"
+    },
+    "BDG2946598": {
+      "phone": "8142036925",
+      "currentAddress": "Tirupati"
+    },
+    "SQB1917855": {
+      "phone": "9652525181",
+      "currentAddress": "Bengaluru"
+    },
+    "SQB0706236": {
+      "phone": "9600078119",
+      "currentAddress": "Bengaluru"
+    },
+    "SQB0706467": {
+      "phone": "9391335347",
+      "currentAddress": "Srikalahasti / Gudur"
+    },
+    "SQB0284679": {
+      "phone": "7674931650",
+      "currentAddress": "Tirupati"
+    },
+    "SQB2047892": {
+      "phone": "6305391681",
+      "currentAddress": "Tirupati"
+    },
+    "SQB2061752": {
+      "phone": "7989720991",
+      "currentAddress": "Tirupati"
+    },
+    "SQB0373142": {
+      "phone": "8978761683",
+      "currentAddress": "Bengaluru"
+    },
+    "SQB1138262": {
+      "phone": "7993897615",
+      "currentAddress": "Damalacheruvu"
+    },
+    "SQB0796393": {
+      "phone": "9360227258",
+      "currentAddress": "Damalacheruvu"
+    },
+    "SQB0780586": {
+      "phone": "7993831877",
+      "currentAddress": "Damalacheruvu"
+    },
+    "SQB0796427": {
+      "phone": "9177549754",
+      "currentAddress": "Tirupati"
+    },
+    "SQB1137595": {
+      "phone": "9166300071",
+      "currentAddress": "Tirupati"
+    },
+    "SQB0087742": {
+      "phone": "9166300071",
+      "currentAddress": "Tirupati"
+    },
+    "BDG2946937": {
+      "phone": "9441030391",
+      "currentAddress": "Damalacheruvu"
+    },
+    "BDG2337046": {
+      "phone": "9676123593",
+      "currentAddress": "Chittoor"
+    },
+    "SQB1137587": {
+      "phone": "8985360107",
+      "currentAddress": "Bengaluru"
+    },
+    "SQB0703950": {
+      "phone": "9740601247",
+      "currentAddress": "Nellore"
+    },
+    "SQB1137553": {
+      "phone": "8500048096",
+      "currentAddress": "Tirupati"
+    },
+    "SQB0013235": {
+      "phone": "9849028675",
+      "currentAddress": "Bengaluru"
+    },
+    "BDG2337384": {
+      "phone": "9632289002",
+      "currentAddress": "Bengaluru"
+    },
+    "SQB1038710": {
+      "phone": "9353336923",
+      "currentAddress": "Bengaluru"
+    },
+    "SQB0706269": {
+      "phone": "9676824115",
+      "currentAddress": "Anantapur"
+    },
+    "SQB1022383": {
+      "phone": "9652228942"
+    },
+    "SQB0703828": {
+      "phone": "7702191107",
+      "currentAddress": "Damalacheruvu"
+    },
+    "SQB0563040": {
+      "phone": "9573377408",
+      "currentAddress": "Bengaluru"
+    },
+    "SQB0512427": {
+      "phone": "6305731936"
+    },
+    "SQB0796401": {
+      "phone": "8309651689"
+    },
+    "SQB0372813": {
+      "phone": "9901376590"
+    },
+    "SQB1022391": {
+      "phone": "7032587875"
+    },
+    "SQB0243295": {
+      "phone": "9108292289",
+      "currentAddress": "Bengaluru"
+    },
+    "BDG2947059": {
+      "phone": "9000036164"
+    },
+    "SQB1968098": {
+      "phone": "8125457990"
+    },
+    "SQB0512401": {
+      "phone": "9573684599"
+    },
+    "SQB0825034": {
+      "phone": "9916004967"
+    },
+    "BDG2948347": {
+      "phone": "8374502078",
+      "currentAddress": "Tirupati"
+    },
+    "SQB0741000": {
+      "phone": "9246993355"
+    }
+  }
+}
