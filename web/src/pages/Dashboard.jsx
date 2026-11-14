@@ -50,8 +50,6 @@ export default function Dashboard() {
     .sort((a, b) => b.unset - a.unset || b.total - a.total)
 
   const shortcuts = [
-    { label: 'Supporters', status: 'supporter', count: campaign?.supporter || 0, tone: 'qc-positive' },
-    { label: 'Family support', status: 'family_support', count: campaign?.family_support || 0, tone: 'qc-teal' },
     { label: 'Pledged', status: 'pledged', count: campaign?.pledged || 0, tone: 'qc-teal' },
     { label: 'Not supporters', status: 'not_supporter', count: campaign?.not_supporter || 0, tone: 'qc-negative' },
     { label: 'Opposed', status: 'opposed', count: campaign?.opposed || 0, tone: 'qc-negative' },
