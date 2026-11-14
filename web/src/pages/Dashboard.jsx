@@ -49,19 +49,6 @@ export default function Dashboard() {
     .slice()
     .sort((a, b) => b.unset - a.unset || b.total - a.total)
 
-  const shortcuts = [
-    { label: 'Pledged', status: 'pledged', count: campaign?.pledged || 0, tone: 'qc-teal' },
-    { label: 'Not supporters', status: 'not_supporter', count: campaign?.not_supporter || 0, tone: 'qc-negative' },
-    { label: 'Opposed', status: 'opposed', count: campaign?.opposed || 0, tone: 'qc-negative' },
-    { label: 'Rival', status: 'rival', count: campaign?.rival || 0, tone: 'qc-negative' },
-    { label: 'Undecided', status: 'undecided', count: campaign?.undecided || 0, tone: 'qc-warn' },
-    { label: 'Contacted', status: 'contacted', count: campaign?.contacted || 0, tone: 'qc-warn' },
-    { label: 'Needs visit', status: 'needs_visit', count: campaign?.needs_visit || 0, tone: 'qc-warn' },
-    { label: 'Not reachable', status: 'nr', count: campaign?.nr || 0, tone: 'qc-muted' },
-    { label: 'Out of station', status: 'out_of_station', count: campaign?.out_of_station || 0, tone: 'qc-muted' },
-    { label: 'Not set', status: 'unset', count: campaign?.unset || 0, tone: 'qc-muted' },
-  ]
-
   return (
     <div className="stack dash-home dash-desk">
       <section className="hero-panel hero-election hero-campaign">
@@ -116,26 +103,6 @@ export default function Dashboard() {
             <span>Coverage</span>
             <strong>{campaign?.statusPct || 0}%</strong>
           </Link>
-        </div>
-      </section>
-
-      <section className="panel dash-status-panel">
-        <div className="panel-head">
-          <h2>Status shortcuts</h2>
-          <Link to="/voters">All voters</Link>
-        </div>
-        <div className="quick-actions quick-actions-desk" aria-label="Status shortcuts">
-          {shortcuts.map((s) => (
-            <button
-              key={s.status}
-              type="button"
-              className={`quick-card ${s.tone}`}
-              onClick={() => goStatus(s.status)}
-            >
-              <span>{s.label}</span>
-              <strong>{s.count.toLocaleString()}</strong>
-            </button>
-          ))}
         </div>
       </section>
 
