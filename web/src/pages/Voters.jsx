@@ -49,6 +49,8 @@ export default function Voters() {
           { label: 'All', value: '' },
           { label: 'Support+', value: 'support_plus', count: campaign?.positive },
           { label: 'Not support', value: 'not_support', count: campaign?.negative },
+          { label: 'Pipeline', value: 'pipeline', count: campaign?.pipeline },
+          { label: 'Field', value: 'field', count: campaign?.field },
           { label: 'Supporters', value: 'supporter', count: campaign?.supporter },
           { label: 'Not supporters', value: 'not_supporter', count: campaign?.not_supporter },
           { label: 'Undecided', value: 'undecided', count: campaign?.undecided },

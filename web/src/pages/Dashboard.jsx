@@ -43,15 +43,29 @@ export default function Dashboard() {
   const topWards = (campaign?.wards || [])
     .slice()
     .sort((a, b) => b.unset - a.unset || b.total - a.total)
-    .slice(0, 6)
+    .slice(0, 8)
 
   const villageCampaign = (campaign?.villages || [])
     .slice()
     .sort((a, b) => b.unset - a.unset || b.total - a.total)
-    .slice(0, 10)
+
+  const shortcuts = [
+    { label: 'Supporters', status: 'supporter', count: campaign?.supporter || 0, tone: 'qc-positive' },
+    { label: 'Family support', status: 'family_support', count: campaign?.family_support || 0, tone: 'qc-teal' },
+    { label: 'Pledged', status: 'pledged', count: campaign?.pledged || 0, tone: 'qc-teal' },
+    { label: 'Not supporters', status: 'not_supporter', count: campaign?.not_supporter || 0, tone: 'qc-negative' },
+    { label: 'Opposed', status: 'opposed', count: campaign?.opposed || 0, tone: 'qc-negative' },
+    { label: 'Rival', status: 'rival', count: campaign?.rival || 0, tone: 'qc-negative' },
+    { label: 'Undecided', status: 'undecided', count: campaign?.undecided || 0, tone: 'qc-warn' },
+    { label: 'Contacted', status: 'contacted', count: campaign?.contacted || 0, tone: 'qc-warn' },
+    { label: 'Needs visit', status: 'needs_visit', count: campaign?.needs_visit || 0, tone: 'qc-warn' },
+    { label: 'Not reachable', status: 'nr', count: campaign?.nr || 0, tone: 'qc-muted' },
+    { label: 'Out of station', status: 'out_of_station', count: campaign?.out_of_station || 0, tone: 'qc-muted' },
+    { label: 'Not set', status: 'unset', count: campaign?.unset || 0, tone: 'qc-muted' },
+  ]
 
   return (
-    <div className="stack dash-home">
+    <div className="stack dash-home dash-desk">
       <section className="hero-panel hero-election hero-campaign">
         <div className="hero-copy">
           <p className="eyebrow">
@@ -61,7 +75,7 @@ export default function Dashboard() {
           <h1>Campaign desk</h1>
           <p className="lede">
             {stats.total.toLocaleString()} electors · {stats.wardsCount || stats.partsCount} wards ·{' '}
-            {famStats.households.toLocaleString()} houses
+            {famStats.households.toLocaleString()} houses · {campaign?.withPhone || 0} phones
           </p>
           <div className="hero-actions">
             <Link className="secondary-btn" to="/voters">
@@ -70,9 +84,16 @@ export default function Dashboard() {
             <Link className="ghost-btn" to="/campaign">
               Full campaign
             </Link>
+            <Link className="ghost-btn" to="/wards">
+              Wards
+            </Link>
+            <Link className="ghost-btn" to="/villages">
+              Villages
+            </Link>
           </div>
         </div>
-        <div className="hero-stats hero-stats-6">
+
+        <div className="hero-stats hero-stats-6" aria-label="Campaign totals">
           <button type="button" className="hs-pos hs-link" onClick={() => goStatus('support_plus')}>
             <span>Support+</span>
             <strong>{campaign?.positive || 0}</strong>
@@ -81,13 +102,13 @@ export default function Dashboard() {
             <span>Not support</span>
             <strong>{campaign?.negative || 0}</strong>
           </button>
-          <button type="button" className="hs-pipe hs-link" onClick={() => goStatus('undecided')}>
-            <span>Undecided</span>
-            <strong>{campaign?.undecided || 0}</strong>
+          <button type="button" className="hs-pipe hs-link" onClick={() => goStatus('pipeline')}>
+            <span>Pipeline</span>
+            <strong>{campaign?.pipeline || 0}</strong>
           </button>
-          <button type="button" className="hs-field hs-link" onClick={() => goStatus('needs_visit')}>
-            <span>Needs visit</span>
-            <strong>{campaign?.needs_visit || 0}</strong>
+          <button type="button" className="hs-field hs-link" onClick={() => goStatus('field')}>
+            <span>Field</span>
+            <strong>{campaign?.field || 0}</strong>
           </button>
           <button type="button" className="hs-unset hs-link" onClick={() => goStatus('unset')}>
             <span>Not set</span>
@@ -100,34 +121,27 @@ export default function Dashboard() {
         </div>
       </section>
 
-      <section className="quick-actions quick-actions-6" aria-label="Status shortcuts">
-        <button type="button" className="quick-card qc-positive" onClick={() => goStatus('supporter')}>
-          <span>Supporters</span>
-          <strong>{(campaign?.supporter || 0).toLocaleString()}</strong>
-        </button>
-        <button type="button" className="quick-card qc-teal" onClick={() => goStatus('family_support')}>
-          <span>Family support</span>
-          <strong>{(campaign?.family_support || 0).toLocaleString()}</strong>
-        </button>
-        <button type="button" className="quick-card qc-negative" onClick={() => goStatus('not_supporter')}>
-          <span>Not supporters</span>
-          <strong>{(campaign?.not_supporter || 0).toLocaleString()}</strong>
-        </button>
-        <button type="button" className="quick-card qc-negative" onClick={() => goStatus('opposed')}>
-          <span>Opposed</span>
-          <strong>{(campaign?.opposed || 0).toLocaleString()}</strong>
-        </button>
-        <button type="button" className="quick-card qc-warn" onClick={() => goStatus('needs_visit')}>
-          <span>Needs visit</span>
-          <strong>{(campaign?.needs_visit || 0).toLocaleString()}</strong>
-        </button>
-        <button type="button" className="quick-card qc-muted" onClick={() => goStatus('unset')}>
-          <span>Not set</span>
-          <strong>{(campaign?.unset || 0).toLocaleString()}</strong>
-        </button>
+      <section className="panel dash-status-panel">
+        <div className="panel-head">
+          <h2>Status shortcuts</h2>
+          <Link to="/voters">All voters</Link>
+        </div>
+        <div className="quick-actions quick-actions-desk" aria-label="Status shortcuts">
+          {shortcuts.map((s) => (
+            <button
+              key={s.status}
+              type="button"
+              className={`quick-card ${s.tone}`}
+              onClick={() => goStatus(s.status)}
+            >
+              <span>{s.label}</span>
+              <strong>{s.count.toLocaleString()}</strong>
+            </button>
+          ))}
+        </div>
       </section>
 
-      <section className="split">
+      <section className="split dash-split">
         <article className="panel">
           <div className="panel-head">
             <h2>Status mix</h2>
@@ -192,6 +206,13 @@ export default function Dashboard() {
                     </td>
                   </tr>
                 ))}
+                {!topWards.length ? (
+                  <tr>
+                    <td colSpan={4} className="muted">
+                      No ward data yet.
+                    </td>
+                  </tr>
+                ) : null}
               </tbody>
             </table>
           </div>
@@ -201,8 +222,10 @@ export default function Dashboard() {
       <article className="panel campaign-report-panel">
         <div className="panel-head">
           <div>
-            <h2>Villages needing coverage</h2>
-            <p className="panel-sub muted small">Top by unset · tap Support+ / Not support to open voters</p>
+            <h2>All villages</h2>
+            <p className="panel-sub muted small">
+              Tap Support+ / Not support / Not set to open voters
+            </p>
           </div>
           <Link to="/campaign">Full report</Link>
         </div>
@@ -214,6 +237,8 @@ export default function Dashboard() {
                 <th className="num">Electors</th>
                 <th className="num">Support+</th>
                 <th className="num">Not support</th>
+                <th className="num">Undecided</th>
+                <th className="num">Field</th>
                 <th className="num">Not set</th>
                 <th>Coverage</th>
               </tr>
@@ -248,8 +273,28 @@ export default function Dashboard() {
                       {v.negative || 0}
                     </button>
                   </td>
+                  <td className="num num-warn">
+                    <button
+                      type="button"
+                      className="cell-btn num-warn"
+                      onClick={() => goStatus('undecided')}
+                    >
+                      {v.undecided || 0}
+                    </button>
+                  </td>
+                  <td className="num num-field">
+                    <button
+                      type="button"
+                      className="cell-btn num-field"
+                      onClick={() => goStatus('field')}
+                    >
+                      {v.field || 0}
+                    </button>
+                  </td>
                   <td className="num num-unset">
-                    <strong>{v.unset || 0}</strong>
+                    <button type="button" className="cell-btn" onClick={() => goStatus('unset')}>
+                      <strong>{v.unset || 0}</strong>
+                    </button>
                   </td>
                   <td>
                     <CoverMeter pct={v.statusPct} />
@@ -258,7 +303,7 @@ export default function Dashboard() {
               ))}
               {!villageCampaign.length ? (
                 <tr>
-                  <td colSpan={6} className="muted">
+                  <td colSpan={8} className="muted">
                     No village campaign data yet.
                   </td>
                 </tr>
@@ -284,7 +329,7 @@ export default function Dashboard() {
               </tr>
             </thead>
             <tbody>
-              {famStats.topFamilies.slice(0, 6).map((f) => (
+              {famStats.topFamilies.slice(0, 8).map((f) => (
                 <tr key={f.id}>
                   <td>{f.part}</td>
                   <td>

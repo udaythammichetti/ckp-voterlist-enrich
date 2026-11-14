@@ -409,6 +409,10 @@ export function filterVoters(
     } else if (voterStatus === 'not_support') {
       const group = statusMeta(v.voterStatus || '').group
       if (group !== 'negative') return false
+    } else if (voterStatus === 'pipeline') {
+      if (statusMeta(v.voterStatus || '').group !== 'pipeline') return false
+    } else if (voterStatus === 'field') {
+      if (statusMeta(v.voterStatus || '').group !== 'field') return false
     } else if (voterStatus && voterStatus !== 'unset' && v.voterStatus !== voterStatus) {
       return false
     }
