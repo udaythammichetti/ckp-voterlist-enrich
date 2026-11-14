@@ -440,11 +440,34 @@
   min-width: min(100%, 14rem);
 }
 
-.hero-stats > div {
+.hero-stats > div,
+.hero-stats > button,
+.hero-stats > a {
   border: 1px solid var(--line);
   border-radius: 12px;
   padding: 0.55rem 0.7rem;
   background: rgba(0, 0, 0, 0.22);
+  color: inherit;
+  text-align: left;
+  text-decoration: none;
+  font: inherit;
+  cursor: pointer;
+  appearance: none;
+  display: block;
+  width: 100%;
+}
+
+.hero-stats > button:hover,
+.hero-stats > a:hover {
+  border-color: rgba(47, 143, 116, 0.45);
+  background: rgba(47, 143, 116, 0.14);
+  text-decoration: none;
+}
+
+.hero-stats .hs-link strong {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  text-decoration-color: rgba(143, 217, 191, 0.35);
 }
 
 .hero-stats span {
@@ -2127,6 +2150,8 @@
   border: 0;
   background: transparent;
   padding: 0;
+  cursor: pointer;
+  font: inherit;
   margin: 0;
   text-align: left;
   cursor: pointer;
@@ -2694,6 +2719,7 @@
 
   .quick-actions,
   .quick-actions-4,
+  .quick-actions-6,
   .quick-actions-8 {
     grid-template-columns: 1fr 1fr;
   }
@@ -2896,6 +2922,10 @@
 
 .quick-actions-8 {
   grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.quick-actions-6 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .hero-stats-6 {
@@ -3202,6 +3232,7 @@
 @media (max-width: 980px) {
   .quick-actions,
   .quick-actions-4,
+  .quick-actions-6,
   .quick-actions-8 {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }

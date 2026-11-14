@@ -1,4 +1,4 @@
-import { applyEnrichment } from './enrichment'
+import { applyEnrichment, statusMeta } from './enrichment'
 import { loadLatestDataset } from './dataStore'
 
 function cleanStr(v) {
@@ -403,7 +403,15 @@ export function filterVoters(
       return false
     }
     if (voterStatus === 'unset' && v.voterStatus) return false
-    if (voterStatus && voterStatus !== 'unset' && v.voterStatus !== voterStatus) return false
+    if (voterStatus === 'support_plus') {
+      const group = statusMeta(v.voterStatus || '').group
+      if (group !== 'positive' && group !== 'soft_positive') return false
+    } else if (voterStatus === 'not_support') {
+      const group = statusMeta(v.voterStatus || '').group
+      if (group !== 'negative') return false
+    } else if (voterStatus && voterStatus !== 'unset' && v.voterStatus !== voterStatus) {
+      return false
+    }
     if (section !== '') {
       if (
         String(v.section) !== String(section) &&

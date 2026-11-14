@@ -97,6 +97,8 @@ export default function FiltersBar({ showPart = true, showSection = true, lockPa
         <span>Status</span>
         <select value={filters.voterStatus || ''} onChange={(e) => setVoterStatus(e.target.value)}>
           <option value="">All statuses</option>
+          <option value="support_plus">Support+ (all)</option>
+          <option value="not_support">Not support (all)</option>
           <option value="unset">Not set</option>
           {VOTER_STATUSES.filter((s) => s.value).map((s) => (
             <option key={s.value} value={s.value}>

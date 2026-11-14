@@ -47,11 +47,13 @@ export default function Voters() {
       <div className="campaign-chips" role="group" aria-label="Status">
         {[
           { label: 'All', value: '' },
-          { label: 'Supporters', value: 'supporter' },
-          { label: 'Not supporters', value: 'not_supporter' },
-          { label: 'Undecided', value: 'undecided' },
-          { label: 'Needs visit', value: 'needs_visit' },
-          { label: 'Not set', value: 'unset' },
+          { label: 'Support+', value: 'support_plus', count: campaign?.positive },
+          { label: 'Not support', value: 'not_support', count: campaign?.negative },
+          { label: 'Supporters', value: 'supporter', count: campaign?.supporter },
+          { label: 'Not supporters', value: 'not_supporter', count: campaign?.not_supporter },
+          { label: 'Undecided', value: 'undecided', count: campaign?.undecided },
+          { label: 'Needs visit', value: 'needs_visit', count: campaign?.needs_visit },
+          { label: 'Not set', value: 'unset', count: campaign?.unset },
         ].map((c) => (
           <button
             key={c.label}
@@ -60,11 +62,7 @@ export default function Voters() {
             onClick={() => setVoterStatus(c.value)}
           >
             {c.label}
-            {c.value === 'supporter' && campaign ? ` · ${campaign.supporter || 0}` : ''}
-            {c.value === 'not_supporter' && campaign ? ` · ${campaign.not_supporter || 0}` : ''}
-            {c.value === 'undecided' && campaign ? ` · ${campaign.undecided || 0}` : ''}
-            {c.value === 'needs_visit' && campaign ? ` · ${campaign.needs_visit || 0}` : ''}
-            {c.value === 'unset' && campaign ? ` · ${campaign.unset}` : ''}
+            {c.count != null ? ` · ${c.count}` : ''}
           </button>
         ))}
       </div>
