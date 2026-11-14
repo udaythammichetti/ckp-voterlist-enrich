@@ -11,9 +11,17 @@ export function hasDatabase() {
 export function getPool() {
   if (!hasDatabase()) return null
   if (!pool) {
+    // Render Postgres requires SSL (internal + external URLs).
+    const useSsl = process.env.PGSSL !== 'false'
     pool = new Pool({
       connectionString: process.env.DATABASE_URL,
-      ssl: process.env.PGSSL === 'false' ? false : { rejectUnauthorized: false },
+      ssl: useSsl ? { rejectUnauthorized: false } : false,
+      max: 5,
+      idleTimeoutMillis: 30000,
+      connectionTimeoutMillis: 15000,
+    })
+    pool.on('error', (err) => {
+      console.error('[db] pool error', err.message || err)
     })
   }
   return pool

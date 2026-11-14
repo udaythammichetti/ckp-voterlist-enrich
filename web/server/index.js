@@ -18,6 +18,7 @@ const port = Number(process.env.PORT) || 4173
 
 const app = express()
 app.disable('x-powered-by')
+app.set('trust proxy', 1)
 app.use(express.json({ limit: '4mb' }))
 
 /** @type {Set<import('express').Response>} */
@@ -34,6 +35,21 @@ function broadcast(event, data) {
   }
 }
 
+async function migrateWithRetry(attempts = 12) {
+  let lastErr
+  for (let i = 1; i <= attempts; i += 1) {
+    try {
+      await migrate()
+      return
+    } catch (err) {
+      lastErr = err
+      console.warn(`[db] migrate attempt ${i}/${attempts} failed:`, err.message || err)
+      await new Promise((r) => setTimeout(r, 2000))
+    }
+  }
+  throw lastErr || new Error('Database migrate failed')
+}
+
 app.get('/api/health', async (_req, res) => {
   let dbOk = false
   let count = 0
@@ -43,7 +59,7 @@ app.get('/api/health', async (_req, res) => {
       dbOk = true
     }
   } catch (err) {
-    return res.status(500).json({
+    return res.status(503).json({
       ok: false,
       db: false,
       error: err.message || 'db error',
@@ -59,6 +75,19 @@ app.get('/api/enrichment', async (_req, res) => {
     res.json({ map, count: Object.keys(map).length })
   } catch (err) {
     res.status(500).json({ error: err.message || 'Failed to list enrichment' })
+  }
+})
+
+// Named path before :epic so "import" is never treated as an EPIC id.
+app.post('/api/enrichment/import', async (req, res) => {
+  try {
+    if (!hasDatabase()) return res.status(503).json({ error: 'DATABASE_URL missing' })
+    const map = req.body?.map && typeof req.body.map === 'object' ? req.body.map : {}
+    const count = await importEnrichmentMap(map)
+    broadcast('enrichment_reload', { count })
+    res.json({ ok: true, count })
+  } catch (err) {
+    res.status(500).json({ error: err.message || 'Failed to import enrichment' })
   }
 })
 
@@ -85,37 +114,36 @@ app.put('/api/enrichment/:epic', async (req, res) => {
   }
 })
 
-app.post('/api/enrichment/import', async (req, res) => {
-  try {
-    if (!hasDatabase()) return res.status(503).json({ error: 'DATABASE_URL missing' })
-    const map = req.body?.map && typeof req.body.map === 'object' ? req.body.map : {}
-    const count = await importEnrichmentMap(map)
-    broadcast('enrichment_reload', { count })
-    res.json({ ok: true, count })
-  } catch (err) {
-    res.status(500).json({ error: err.message || 'Failed to import enrichment' })
-  }
-})
-
 app.get('/api/events', (req, res) => {
-  res.setHeader('Content-Type', 'text/event-stream')
-  res.setHeader('Cache-Control', 'no-cache')
+  res.setHeader('Content-Type', 'text/event-stream; charset=utf-8')
+  res.setHeader('Cache-Control', 'no-cache, no-transform')
   res.setHeader('Connection', 'keep-alive')
-  res.flushHeaders?.()
-  res.write(`event: connected\ndata: ${JSON.stringify({ ok: true })}\n\n`)
+  res.setHeader('X-Accel-Buffering', 'no')
+  if (typeof res.flushHeaders === 'function') res.flushHeaders()
+
+  // Keep SSE alive behind Render / proxies
+  req.socket.setTimeout(0)
+  req.socket.setNoDelay?.(true)
+  req.socket.setKeepAlive?.(true)
+
+  res.write(`event: connected\ndata: ${JSON.stringify({ ok: true, t: Date.now() })}\n\n`)
   sseClients.add(res)
+
   const ping = setInterval(() => {
     try {
-      res.write(`event: ping\ndata: {}\n\n`)
+      res.write(`event: ping\ndata: ${JSON.stringify({ t: Date.now() })}\n\n`)
     } catch {
       clearInterval(ping)
       sseClients.delete(res)
     }
-  }, 25000)
-  req.on('close', () => {
+  }, 15000)
+
+  const cleanup = () => {
     clearInterval(ping)
     sseClients.delete(res)
-  })
+  }
+  req.on('close', cleanup)
+  req.on('error', cleanup)
 })
 
 app.use(express.static(dist, { index: false, maxAge: '1h' }))
@@ -130,14 +158,14 @@ app.get('/{*spa}', (req, res, next) => {
 
 async function main() {
   if (hasDatabase()) {
-    await migrate()
+    await migrateWithRetry()
     console.log('[db] migrated voter_enrichment')
   } else {
     console.warn('[db] DATABASE_URL not set — API enrichment disabled')
   }
 
   app.listen(port, '0.0.0.0', () => {
-    console.log(`[server] listening on :${port}`)
+    console.log(`[server] listening on :${port} db=${hasDatabase() ? 'on' : 'off'}`)
   })
 }
 

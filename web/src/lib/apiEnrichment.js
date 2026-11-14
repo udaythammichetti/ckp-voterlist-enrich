@@ -11,7 +11,11 @@ export async function checkEnrichmentApi() {
     }
     const body = await res.json()
     apiAvailable = Boolean(body?.ok && body?.db)
-    return { ok: Boolean(body?.ok), db: Boolean(body?.db), enrichmentCount: body?.enrichmentCount || 0 }
+    return {
+      ok: Boolean(body?.ok),
+      db: Boolean(body?.db),
+      enrichmentCount: body?.enrichmentCount || 0,
+    }
   } catch {
     apiAvailable = false
     return { ok: false, db: false }
@@ -37,9 +41,11 @@ export async function putEnrichment(epic, patch) {
     body: JSON.stringify(patch || {}),
   })
   if (!res.ok) {
+    if (res.status === 503) apiAvailable = false
     const err = await res.json().catch(() => ({}))
     throw new Error(err.error || `enrichment save failed: ${res.status}`)
   }
+  apiAvailable = true
   return res.json()
 }
 
@@ -50,14 +56,17 @@ export async function importEnrichmentMap(map) {
     body: JSON.stringify({ map: map || {} }),
   })
   if (!res.ok) {
+    if (res.status === 503) apiAvailable = false
     const err = await res.json().catch(() => ({}))
     throw new Error(err.error || `enrichment import failed: ${res.status}`)
   }
+  apiAvailable = true
   return res.json()
 }
 
 /**
  * Subscribe to enrichment SSE. Returns an unsubscribe function.
+ * Re-fetches on reconnect so missed updates after Render sleep are recovered.
  */
 export function subscribeEnrichmentEvents(handlers = {}) {
   let source
@@ -83,9 +92,13 @@ export function subscribeEnrichmentEvents(handlers = {}) {
       handlers.onReload?.({})
     }
   }
+  const onConnected = () => {
+    handlers.onConnected?.()
+  }
 
   source.addEventListener('enrichment', onEnrichment)
   source.addEventListener('enrichment_reload', onReload)
+  source.addEventListener('connected', onConnected)
   source.onerror = () => {
     handlers.onError?.()
   }
@@ -93,6 +106,7 @@ export function subscribeEnrichmentEvents(handlers = {}) {
   return () => {
     source.removeEventListener('enrichment', onEnrichment)
     source.removeEventListener('enrichment_reload', onReload)
+    source.removeEventListener('connected', onConnected)
     source.close()
   }
 }

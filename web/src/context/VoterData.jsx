@@ -142,6 +142,19 @@ export function VoterDataProvider({ children }) {
 
   useEffect(() => {
     if (!dbLive) return undefined
+
+    const refreshFromDb = async () => {
+      try {
+        const remote = await fetchEnrichmentMap()
+        replaceEnrichmentMap(remote)
+        const { voters: rows, meta: m, sourceLabel } = await loadBestVoters()
+        applyLoaded(rows, m, sourceLabel)
+      } catch (e) {
+        console.warn('enrichment reload failed', e)
+      }
+    }
+
+    let connectCount = 0
     return subscribeEnrichmentEvents({
       onEnrichment: ({ epic, row }) => {
         if (!epic || !row) return
@@ -150,15 +163,11 @@ export function VoterDataProvider({ children }) {
         setVoters((prev) => prev.map((v) => (v.epic === key ? applyRowToVoter(v, row) : v)))
         setSelectedVoter((cur) => (cur && cur.epic === key ? applyRowToVoter(cur, row) : cur))
       },
-      onReload: async () => {
-        try {
-          const remote = await fetchEnrichmentMap()
-          replaceEnrichmentMap(remote)
-          const { voters: rows, meta: m, sourceLabel } = await loadBestVoters()
-          applyLoaded(rows, m, sourceLabel)
-        } catch (e) {
-          console.warn('enrichment reload failed', e)
-        }
+      onReload: refreshFromDb,
+      // Skip first connect (initial load already synced). Re-pull after Render sleep.
+      onConnected: () => {
+        connectCount += 1
+        if (connectCount > 1) refreshFromDb()
       },
     })
   }, [dbLive, applyLoaded])
