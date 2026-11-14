@@ -80,26 +80,21 @@ export default function Shell() {
           </p>
         </div>
         <div className="topbar-right">
-          <div className="topbar-tools">
-            <div className="lang-toggle" role="group" aria-label="Language">
-              <button
-                type="button"
-                className={lang === 'en' ? 'is-active' : ''}
-                onClick={() => setLanguage('en')}
-              >
-                EN
-              </button>
-              <button
-                type="button"
-                className={lang === 'te' ? 'is-active' : ''}
-                onClick={() => setLanguage('te')}
-              >
-                తెలుగు
-              </button>
-            </div>
-            <a className="logout-link" href="/logout">
-              Logout
-            </a>
+          <div className="lang-toggle" role="group" aria-label="Language">
+            <button
+              type="button"
+              className={lang === 'en' ? 'is-active' : ''}
+              onClick={() => setLanguage('en')}
+            >
+              EN
+            </button>
+            <button
+              type="button"
+              className={lang === 'te' ? 'is-active' : ''}
+              onClick={() => setLanguage('te')}
+            >
+              తెలుగు
+            </button>
           </div>
           <nav ref={navRef} className="nav-links" aria-label="Primary">
             {links.map((l) => {
@@ -117,6 +112,9 @@ export default function Shell() {
               )
             })}
           </nav>
+          <a className="logout-link" href="/logout">
+            Logout
+          </a>
         </div>
       </header>
       <p className="print-only print-banner">

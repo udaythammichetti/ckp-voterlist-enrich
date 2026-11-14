@@ -97,13 +97,6 @@
   flex: 1 1 auto;
 }
 
-.topbar-tools {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.55rem;
-  flex-wrap: wrap;
-}
-
 .logout-link {
   color: var(--muted);
   font-size: 0.78rem;
@@ -115,6 +108,8 @@
   min-height: 2.2rem;
   display: inline-flex;
   align-items: center;
+  flex: 0 0 auto;
+  margin-left: auto;
 }
 
 .logout-link:hover {
@@ -2435,14 +2430,25 @@
 
   .topbar-right {
     width: 100%;
-    flex-direction: column;
-    align-items: stretch;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
     justify-content: flex-start;
     gap: 0.55rem;
   }
 
   .lang-toggle {
-    align-self: flex-start;
+    order: 1;
+  }
+
+  .nav-links {
+    order: 3;
+    flex: 1 1 100%;
+  }
+
+  .logout-link {
+    order: 2;
+    margin-left: auto;
   }
 
   .nav-links {
