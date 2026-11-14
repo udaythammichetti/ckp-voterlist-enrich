@@ -1,0 +1,15 @@
+# Render Blueprint — Static Site for the Vite React app
+# Dashboard: New → Blueprint → connect this GitHub repo
+# Or: New → Static Site → Root Directory: web
+
+services:
+  - type: web
+    name: ckp-voterlist-enrich
+    runtime: static
+    rootDir: web
+    buildCommand: npm ci && npm run build
+    staticPublishPath: dist
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html

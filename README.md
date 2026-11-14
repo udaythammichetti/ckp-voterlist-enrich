@@ -23,6 +23,18 @@ npm run dev
 
 App: http://localhost:5173
 
+## Deploy on Render (static site)
+
+1. Push this repo to GitHub (already: `udaythammichetti/ckp-voterlist-enrich`).
+2. In [Render](https://dashboard.render.com): **New** → **Blueprint** → select the repo  
+   (uses `render.yaml`), **or** **New** → **Static Site** with:
+   - **Root Directory:** `web`
+   - **Build Command:** `npm ci && npm run build`
+   - **Publish Directory:** `dist`
+3. Add rewrite: `/*` → `/index.html` (SPA routes).
+
+**Note:** Phone / address / status still save in the browser. **Save version** to the project folder is a local Vite-dev feature and is not available on the static Render host.
+
 ## Data
 
 - Source PDF: `vedagirivaripalle 2026voterlist.pdf`
