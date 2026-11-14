@@ -1,0 +1,90 @@
+import { useEffect } from 'react'
+import { NavLink, Outlet, useLocation } from 'react-router-dom'
+import VoterDetailModal from './VoterDetailModal'
+import { useLocale } from '../context/Locale'
+import { useVoterData } from '../context/VoterData'
+
+const links = [
+  { to: '/', label: 'Dashboard', end: true },
+  { to: '/voters', label: 'Voters' },
+  { to: '/families', label: 'Families' },
+  { to: '/wards', label: 'Wards' },
+  { to: '/villages', label: 'Villages' },
+  { to: '/campaign', label: 'Campaign' },
+  { to: '/consolidated', label: 'Consolidated' },
+]
+
+function titleForPath(pathname) {
+  if (pathname === '/') return 'Dashboard'
+  if (pathname.startsWith('/voters')) return 'Voters'
+  if (pathname.startsWith('/families')) return 'Families'
+  if (pathname.startsWith('/wards') || pathname.startsWith('/parts')) return 'Wards'
+  if (pathname.startsWith('/villages')) return 'Villages'
+  if (pathname.startsWith('/campaign')) return 'Campaign'
+  if (pathname.startsWith('/consolidated') || pathname.startsWith('/validation')) {
+    return 'Consolidated'
+  }
+  return 'Chukkavaripalli'
+}
+
+export default function Shell() {
+  const { loading, voters } = useVoterData()
+  const { lang, setLanguage, t } = useLocale()
+  const { pathname } = useLocation()
+
+  useEffect(() => {
+    document.title = `${t(titleForPath(pathname))} · Chukkavaripalli`
+    document.documentElement.lang = lang === 'te' ? 'te' : 'en'
+  }, [pathname, lang, t])
+
+  return (
+    <div className="app-shell">
+      <header className="topbar">
+        <div className="brand-block">
+          <p className="brand-kicker">Sarpanch 2026</p>
+          <p className="brand-mark">Chukkavaripalli</p>
+          <p className="brand-sub">
+            {!loading ? `${voters.length.toLocaleString()} electors` : 'Loading…'}
+          </p>
+        </div>
+        <div className="topbar-right">
+          <div className="lang-toggle" role="group" aria-label="Language">
+            <button
+              type="button"
+              className={lang === 'en' ? 'is-active' : ''}
+              onClick={() => setLanguage('en')}
+            >
+              EN
+            </button>
+            <button
+              type="button"
+              className={lang === 'te' ? 'is-active' : ''}
+              onClick={() => setLanguage('te')}
+            >
+              తెలుగు
+            </button>
+          </div>
+          <nav className="nav-links" aria-label="Primary">
+            {links.map((l) => (
+              <NavLink
+                key={l.to}
+                to={l.to}
+                end={l.end}
+                className={({ isActive }) => (isActive ? 'nav active' : 'nav')}
+              >
+                {t(l.label)}
+              </NavLink>
+            ))}
+          </nav>
+        </div>
+      </header>
+      <p className="print-only print-banner">
+        Chukkavaripalli · {lang === 'te' ? 'తెలుగు' : 'English'} · {t(titleForPath(pathname))}
+      </p>
+      <main className="page">
+        <Outlet />
+      </main>
+      <VoterDetailModal />
+    </div>
+  )
+}
