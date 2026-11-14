@@ -37,6 +37,20 @@
   max-width: min(100%, 18rem);
 }
 
+.brand-home {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+}
+
+.brand-home:hover {
+  text-decoration: none;
+}
+
+.brand-home:hover .brand-mark {
+  color: var(--accent-2);
+}
+
 .brand-kicker {
   margin: 0 0 0.1rem;
   font-size: 0.68rem;
@@ -54,6 +68,7 @@
   color: var(--text);
   line-height: 1.05;
   letter-spacing: -0.03em;
+  transition: color 0.15s ease;
 }
 
 .brand-sub {
@@ -2393,19 +2408,30 @@
 
   .topbar-right {
     width: 100%;
-    justify-content: space-between;
-    gap: 0.65rem;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+    gap: 0.55rem;
+  }
+
+  .lang-toggle {
+    align-self: flex-start;
   }
 
   .nav-links {
+    width: 100%;
     justify-content: flex-start;
     flex-wrap: nowrap;
     overflow-x: auto;
+    overscroll-behavior-x: contain;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
     max-width: 100%;
-    padding-bottom: 0.15rem;
-    mask-image: linear-gradient(90deg, #000 85%, transparent);
+    padding: 0.1rem 0.15rem 0.25rem;
+    gap: 0.35rem;
+    scroll-snap-type: x proximity;
+    /* Fade both edges so last tabs stay reachable */
+    mask-image: linear-gradient(90deg, transparent, #000 12px, #000 calc(100% - 12px), transparent);
   }
 
   .nav-links::-webkit-scrollbar {
@@ -2413,11 +2439,12 @@
   }
 
   .nav {
-    padding: 0.48rem 0.78rem;
-    font-size: 0.86rem;
-    min-height: 2.5rem;
+    padding: 0.5rem 0.85rem;
+    font-size: 0.88rem;
+    min-height: 2.6rem;
     display: inline-flex;
     align-items: center;
+    scroll-snap-align: center;
   }
 
   .lang-toggle button {

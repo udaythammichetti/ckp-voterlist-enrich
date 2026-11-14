@@ -1,5 +1,5 @@
-import { useEffect } from 'react'
-import { NavLink, Outlet, useLocation } from 'react-router-dom'
+import { useEffect, useRef } from 'react'
+import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
 import VoterDetailModal from './VoterDetailModal'
 import { useLocale } from '../context/Locale'
 import { useVoterData } from '../context/VoterData'
@@ -27,27 +27,53 @@ function titleForPath(pathname) {
   return 'Chukkavaripalli'
 }
 
+function pathMatches(to, pathname, end) {
+  if (end) return pathname === to
+  if (to === '/') return pathname === '/'
+  return pathname === to || pathname.startsWith(`${to}/`)
+}
+
 export default function Shell() {
   const { loading, voters, dbLive } = useVoterData()
   const { lang, setLanguage, t } = useLocale()
   const { pathname } = useLocation()
+  const navRef = useRef(null)
 
   useEffect(() => {
     document.title = `${t(titleForPath(pathname))} · Chukkavaripalli`
     document.documentElement.lang = lang === 'te' ? 'te' : 'en'
   }, [pathname, lang, t])
 
+  // Scroll active tab inside the nav scroller only (don't jump the page).
   useEffect(() => {
-    const active = document.querySelector('.nav-links .nav.active')
-    active?.scrollIntoView?.({ inline: 'center', block: 'nearest', behavior: 'smooth' })
+    const nav = navRef.current
+    if (!nav) return undefined
+    const active = nav.querySelector('.nav.active')
+    if (!active) return undefined
+
+    const frame = requestAnimationFrame(() => {
+      const navRect = nav.getBoundingClientRect()
+      const activeRect = active.getBoundingClientRect()
+      const delta =
+        activeRect.left - navRect.left - (navRect.width - activeRect.width) / 2
+      nav.scrollBy({ left: delta, behavior: 'smooth' })
+    })
+    return () => cancelAnimationFrame(frame)
+  }, [pathname, lang])
+
+  // New page → start at top (mobile feels broken otherwise).
+  useEffect(() => {
+    window.scrollTo(0, 0)
   }, [pathname])
 
   return (
     <div className="app-shell">
       <header className="topbar">
         <div className="brand-block">
-          <p className="brand-kicker">Sarpanch 2026</p>
-          <p className="brand-mark">Chukkavaripalli</p>
+          <Link to="/" className="brand-home" aria-label="Home dashboard">
+            <p className="brand-kicker">Sarpanch 2026</p>
+            <p className="brand-mark">Chukkavaripalli</p>
+          </Link>
           <p className="brand-sub">
             {!loading ? `${voters.length.toLocaleString()} electors` : 'Loading…'}
             {dbLive ? <span className="db-live"> · Live DB</span> : null}
@@ -70,17 +96,21 @@ export default function Shell() {
               తెలుగు
             </button>
           </div>
-          <nav className="nav-links" aria-label="Primary">
-            {links.map((l) => (
-              <NavLink
-                key={l.to}
-                to={l.to}
-                end={l.end}
-                className={({ isActive }) => (isActive ? 'nav active' : 'nav')}
-              >
-                {t(l.label)}
-              </NavLink>
-            ))}
+          <nav ref={navRef} className="nav-links" aria-label="Primary">
+            {links.map((l) => {
+              const active = pathMatches(l.to, pathname, l.end)
+              return (
+                <NavLink
+                  key={l.to}
+                  to={l.to}
+                  end={l.end}
+                  className={() => (active ? 'nav active' : 'nav')}
+                  aria-current={active ? 'page' : undefined}
+                >
+                  {t(l.label)}
+                </NavLink>
+              )
+            })}
           </nav>
         </div>
       </header>

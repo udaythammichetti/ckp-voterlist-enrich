@@ -1,4 +1,4 @@
-import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
+import { BrowserRouter, Navigate, Route, Routes, useParams } from 'react-router-dom'
 import Shell from './components/Shell'
 import { LocaleProvider } from './context/Locale'
 import { VoterDataProvider } from './context/VoterData'
@@ -13,6 +13,11 @@ import Voters from './pages/Voters'
 import Wards from './pages/Wards'
 import WardDetail from './pages/WardDetail'
 import './App.css'
+
+function RedirectPartsToWards() {
+  const { wardId } = useParams()
+  return <Navigate to={`/wards/${encodeURIComponent(wardId || '')}`} replace />
+}
 
 export default function App() {
   return (
@@ -33,7 +38,7 @@ export default function App() {
               <Route path="consolidated" element={<Consolidated />} />
               <Route path="validation" element={<Navigate to="/consolidated" replace />} />
               <Route path="parts" element={<Navigate to="/wards" replace />} />
-              <Route path="parts/:wardId" element={<WardDetail />} />
+              <Route path="parts/:wardId" element={<RedirectPartsToWards />} />
               <Route path="*" element={<Navigate to="/" replace />} />
             </Route>
           </Routes>
