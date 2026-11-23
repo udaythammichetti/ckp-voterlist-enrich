@@ -62,30 +62,57 @@ GARBAGE_LETTER_PREFIX = {
 }
 
 
+def _normalize_epic_prefix(pre: str) -> str:
+    pre = (pre or "").upper().replace("0", "O")
+    # Common OCR: 1AX / lAX / I4X / TAX → IAX; 8DG / BOG → BDG
+    if pre in {"IAX", "1AX", "LAX", "TAX", "IAN", "IXX", "IIX", "IXO", "IXI", "IOX", "III", "IIO", "IOO", "IOI", "I4X", "IAH", "IAK"}:
+        return "IAX"
+    if pre in {"BDG", "8DG", "BOG", "BD0", "BDO", "BDQ", "B0G"}:
+        return "BDG"
+    if re.fullmatch(r"[A-Z]{3}", pre):
+        return pre
+    return ""
+
+
 def extract_epic(text: str, fallback: str = "") -> str:
-    s = (text or "").upper().replace(" ", "").replace("O", "0")
-    # Prefer digit-garbled known series from OCR text
+    """Pull EPIC from OCR; only IAX/BDG for Damalacheruvu (ignore SCD/EEE OCR noise)."""
+    raw = text or ""
+    s = re.sub(r"[^A-Za-z0-9]", "", raw.upper()).replace("O", "0")
+    s2 = re.sub(r"[^A-Za-z0-9]", "", raw.upper())
+
+    candidates: list[str] = []
+
+    # Prefer known series anywhere in the card text
+    for m in re.finditer(r"([A-Z0-9]{3})(\d{7})", s):
+        pref = _normalize_epic_prefix(m.group(1))
+        if pref in {"IAX", "BDG"}:
+            candidates.append(pref + m.group(2))
+
     for dig, pref in DIGIT_PREFIX.items():
-        m = re.search(rf"(?<!\d){dig}(\d{{7}})(?!\d)", s)
-        if m:
-            return pref + m.group(1)
-    m = re.search(r"\b([A-Z]{3}\d{7})\b", s)
-    if m:
-        epic = m.group(1)
-        pre, num = epic[:3], epic[3:]
-        if pre in {"IXX", "IIX", "IXO", "IXI", "IOX", "III", "IIO", "IOO", "IOI", "IAN", "TAX", "LAX", "1AX"}:
-            return "IAX" + num
-        if pre in {"8DG", "BOG", "BD0", "BDO"}:
-            return "BDG" + num
-        return epic
-    # fallback from prior epic field
+        if not dig.isdigit():
+            continue
+        for m in re.finditer(rf"(?<!\d){dig}(\d{{7}})(?!\d)", s):
+            candidates.append(pref + m.group(1))
+
+    for m in re.finditer(r"([Il1]AX|IAX|TAX|LAX)(\d{7})", s2, re.I):
+        candidates.append("IAX" + m.group(2))
+    for m in re.finditer(r"(BDG|8DG|BOG)(\d{7})", s2, re.I):
+        candidates.append("BDG" + m.group(2))
+
+    # Prefer IAX (dominant series), then BDG; last match often is the card footer EPIC
+    iax = [c for c in candidates if c.startswith("IAX")]
+    bdg = [c for c in candidates if c.startswith("BDG")]
+    if iax:
+        return iax[-1]
+    if bdg:
+        return bdg[-1]
+
     fb = (fallback or "").upper()
-    m = re.search(r"([A-Z]{3})(\d{7})", fb)
+    m = re.search(r"([A-Z0-9]{3})(\d{7})", re.sub(r"[^A-Z0-9]", "", fb))
     if m:
-        pre, num = m.group(1), m.group(2)
-        if pre in {"IXX", "IIX", "IXO", "IXI", "IOX", "III", "IIO", "IOO", "IOI", "IAN", "TAX", "LAX"}:
-            return "IAX" + num
-        return pre + num
+        pref = _normalize_epic_prefix(m.group(1))
+        if pref in {"IAX", "BDG"}:
+            return pref + m.group(2)
     return ""
 
 
