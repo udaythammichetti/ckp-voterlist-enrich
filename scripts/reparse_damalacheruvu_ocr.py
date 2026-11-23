@@ -89,50 +89,130 @@ def extract_epic(text: str, fallback: str = "") -> str:
     return ""
 
 
+def _clean_person_value(val: str) -> str:
+    val = clean_spaces(val or "")
+    val = re.sub(r"^[:.\s\|\-_]+", "", val)
+    val = re.split(
+        r"తండ్రి|తల్లి|భర్త|వయస్సు|వయసు|మనస్సు|లింగము|ఇంటి|ఏటి|ఐడి|కార్డు|నెం|"
+        r"Father|Mother|Husband|Age|House",
+        val,
+        maxsplit=1,
+    )[0]
+    val = clean_spaces(re.sub(r"[|\[\]\{\}]+", " ", val))
+    val = re.sub(r"[\u200c\u200d]+", "", val)  # ZWJ/ZWNJ noise
+    return clean_spaces(val)
+
+
+def _is_plausible_person(val: str) -> bool:
+    if not val or len(val) < 2:
+        return False
+    if re.search(r"(కార్డు|నెం|IAX|BDG|\d{6,})", val, re.I):
+        return False
+    if re.fullmatch(r"[:.\-\s]+", val):
+        return False
+    # mostly punctuation / latin OCR garbage only
+    letters = re.sub(r"[^A-Za-z\u0C00-\u0C7F]", "", val)
+    if len(letters) < 2:
+        return False
+    return True
+
+
 def parse_name(text: str) -> str:
-    # tolerate OCR variants of ఓటరు పేరు
+    """Extract voter name; tolerate heavy Telugu OCR mangling of ఓటరు పేరు."""
     patterns = [
-        r"ఓటరు\s*పేరు\s*[:.\s]*([^\n]+)",
         r"ఓటరు\s*పేరు\.?\s*[:.\s]*([^\n]+)",
-        r"ఓటరు\s*[:.\s]*([^\n]{2,})",
-        r"ఏరు\s*bo\s*[:.\s]*([^\n]+)",  # common OCR mangling
-        r"Lod\s*(?:Do|bo|Dd)\s*[:.\s]*([^\n]+)",
+        r"ఓటరుపేరు\.?\s*[:.\s]*([^\n]+)",
+        r"ఓటరు\s*[:.\s]*([^\n]{2,40})",
+        r"ఏరు\s*పేరు\.?\s*[:.\s]*([^\n]+)",
+        r"ఏరు\s*boo?\s*[:.\s]*([^\n]+)",
+        r"ఏరు\s*bo\s*[:.\s]*([^\n]+)",
+        r"(?i)l+o[do]\s*b[o0h]\s*[:.\s]*([^\n]+)",  # Loo/Lob/Lod bo
+        r"(?i)so+o?\s*bh?\s*[:.\s]*([^\n]+)",  # soo bh
+        r"(?i)no+b\s*[:.\s]*([^\n]+)",  # noob :
+        r"(?i)(?:^|\n)\s*(?:bo+|bh)\s*[:.\s]+([^\n]{2,40})",
+        # bare పేరు line when it appears before age/relation (name-only crop)
+        r"(?:^|\n)\s*పేరు\.?\s*[:.\s]*([^\n]{2,40})",
     ]
     for pat in patterns:
-        m = re.search(pat, text, re.I)
+        m = re.search(pat, text)
         if not m:
             continue
-        val = clean_spaces(m.group(1))
-        val = re.split(r"తండ్రి|తల్లి|భర్త|వయస్సు|లింగము|ఇంటి|ఐడి", val)[0]
-        val = clean_spaces(re.sub(r"^[:.\s]+", "", val))
-        # reject if looks like EPIC / label junk
-        if not val or len(val) < 2:
-            continue
-        if re.search(r"(కార్డు|నెం|IAX|BDG|\d{7})", val, re.I):
-            continue
+        val = _clean_person_value(m.group(1))
         if val.startswith("పేరు"):
+            val = _clean_person_value(val[len("పేరు") :])
+        if _is_plausible_person(val):
+            return val
+
+    # Fallback: first Telugu-heavy line after a header, before age/gender
+    lines = [ln.strip() for ln in text.splitlines() if ln.strip()]
+    for i, ln in enumerate(lines):
+        if re.search(r"వయస్సు|లింగము|ఇంటి|ఐడి|కార్డు", ln):
+            break
+        if re.search(r"తండ్రి|తల్లి|భర్త", ln):
+            break
+        # skip pure serial/header lines
+        if re.search(r"అ\.ఓ|గా\.పం|SEC|166\s*-", ln):
             continue
-        return val
+        te = len(re.findall(r"[\u0C00-\u0C7F]", ln))
+        if te >= 3 and "పేరు" not in ln:
+            # line may be "label : value" already handled; try raw
+            if ":" in ln:
+                val = _clean_person_value(ln.split(":", 1)[1])
+            else:
+                val = _clean_person_value(ln)
+            if _is_plausible_person(val) and not re.match(r"^(వయస్|లింగ|ఇంటి)", val):
+                return val
     return ""
 
 
 def parse_relation(text: str) -> tuple[str, str]:
-    for label, rtype in (
-        ("భర్త పేరు", "Husband"),
-        ("భర్తపేరు", "Husband"),
-        ("తండ్రి పేరు", "Father"),
-        ("తండ్రిపేరు", "Father"),
-        ("తల్లి పేరు", "Mother"),
-        ("తల్లిపేరు", "Mother"),
-        ("తంది పేరు", "Father"),
-    ):
-        if label in text:
-            after = text.split(label, 1)[1]
-            after = re.split(r"వయస్సు|లింగము|ఇంటి|మనస్సు|ఓటరు", after)[0]
-            val = clean_spaces(re.sub(r"^[:.\s]+", "", after))
-            val = re.sub(r"[|\[\]]+", " ", val)
-            val = clean_spaces(val)
-            if val and not re.search(r"\d{7}", val):
+    patterns = [
+        (r"భర్త\s*పేరు\.?\s*[:.\s]*([^\n]+)", "Husband"),
+        (r"భర్తపేరు\.?\s*[:.\s]*([^\n]+)", "Husband"),
+        (r"భర్త[^\n]{0,6}[:.\s]+([^\n]+)", "Husband"),  # భర్తశ్హురు / భర్తశ్లేరు
+        (r"భర్త\s*[:.\s]+([^\n]+)", "Husband"),
+        (r"తండ్రి\s*పేరు\.?\s*[:.\s]*([^\n]+)", "Father"),
+        (r"తండ్రిపేరు\.?\s*[:.\s]*([^\n]+)", "Father"),
+        (r"తండి\s*పేరు\.?\s*[:.\s]*([^\n]+)", "Father"),
+        (r"తండ్రి[^\n]{0,6}[:.\s=]+([^\n]+)", "Father"),
+        (r"తండ్రి\s*[:.\s]+([^\n]+)", "Father"),
+        (r"తల్లి\s*పేరు\.?\s*[:.\s]*([^\n]+)", "Mother"),
+        (r"తల్లిపేరు\.?\s*[:.\s]*([^\n]+)", "Mother"),
+        (r"తల్లి\s*[:.\s]+([^\n]+)", "Mother"),
+        # OCR mangled father/husband labels
+        (r"(?i)so+g\s*bo\s*[:.\s]*([^\n]+)", "Father"),
+        (r"(?i)2\|\|\s*తండి\s*పేరు\.?\s*[:.\s]*([^\n]+)", "Father"),
+    ]
+    for pat, rtype in patterns:
+        m = re.search(pat, text)
+        if not m:
+            continue
+        val = _clean_person_value(m.group(1))
+        if _is_plausible_person(val):
+            return rtype, val
+
+    # Label on one line, value on next
+    lines = [ln.strip() for ln in text.splitlines()]
+    for i, ln in enumerate(lines):
+        rtype = ""
+        if re.search(r"భర్త", ln):
+            rtype = "Husband"
+        elif re.search(r"తండ్రి|తండి", ln):
+            rtype = "Father"
+        elif re.search(r"తల్లి", ln):
+            rtype = "Mother"
+        if not rtype:
+            continue
+        if ":" in ln:
+            val = _clean_person_value(ln.split(":", 1)[1])
+            if _is_plausible_person(val):
+                return rtype, val
+        if i + 1 < len(lines):
+            nxt = lines[i + 1]
+            if re.search(r"వయస్సు|లింగము|ఇంటి|ఓటరు", nxt):
+                continue
+            val = _clean_person_value(nxt.split(":", 1)[-1] if ":" in nxt else nxt)
+            if _is_plausible_person(val):
                 return rtype, val
     return "", ""
 
@@ -152,19 +232,46 @@ def parse_age(text: str) -> int | None:
     return None
 
 
+def _normalize_house(h: str) -> str:
+    h = clean_spaces(h or "").rstrip(".:|,").lstrip("జ+")
+    h = h.replace(" ", "")
+    # OCR letter noise inside house
+    h = re.sub(r"[^0-9/\-]", "", h)
+    if not h:
+        return ""
+    # 141/1 → 1-41/1 ; 1391 → 1-391 ; 181 → 1-81 when 3 digits
+    if re.fullmatch(r"\d{3,}/\d+", h) and "-" not in h:
+        h = h[0] + "-" + h[1:]
+    elif re.fullmatch(r"\d{3,4}", h) and "-" not in h:
+        h = h[0] + "-" + h[1:]
+    # keep only plausible house patterns
+    if not re.search(r"\d", h):
+        return ""
+    if len(h) > 20:
+        return ""
+    return h
+
+
 def parse_house(text: str) -> str:
-    for pat in (
-        r"ఇంటి\s*సంఖ్య\s*[:.\s]*([0-9][0-9A-Za-z/\-]{0,24})",
-        r"ఇంటిసంఖ్య\s*[:.\s]*([0-9][0-9A-Za-z/\-]{0,24})",
-        r"ఏటి\s*సంఖ్య\s*[:.\s]*([0-9][0-9A-Za-z/\-]{0,24})",
-        r"House\s*(?:No\.?)?\s*[:.\s]*([0-9][0-9A-Za-z/\-]{0,24})",
-    ):
-        m = re.search(pat, text, re.I)
-        if m:
-            h = clean_spaces(m.group(1)).rstrip(".:|")
-            # normalize 141/1 → 1-41/1 when missing dash after first digit cluster
-            if re.fullmatch(r"\d{3,}/\d+", h) and "-" not in h:
-                h = h[0] + "-" + h[1:]
+    patterns = [
+        r"ఇంటి\s*సంఖ్య\s*[:.\sజ]*([0-9][0-9A-Za-z/\-]{0,24})",
+        r"ఇంటిసంఖ్య\s*[:.\sజ]*([0-9][0-9A-Za-z/\-]{0,24})",
+        r"ఇంటి\s*(?:Soms|Sons|Sows|Hows|Doms)\s*[:.\s]*([0-9][0-9A-Za-z/\-]{0,24})",
+        r"ఏటి\s*సంఖ్య\s*[:.+\s]*([0-9][0-9A-Za-z/\-]{0,24})",
+        r"ఏటి\s*(?:Soms|Sons|Sows)\s*[:.\s]*([0-9][0-9A-Za-z/\-]{0,24})",
+        r"టి\s*సంఖ్య?\s*[:.\s]*([0-9][0-9A-Za-z/\-]{0,24})",
+        r"సంఖ\s*[:.\s]*([0-9][0-9/\-]{1,20})",
+        r"(?i)(?:Rot|Bot|pot|Fao|ROB|my\s*pot)\s*(?:Sons|Soms|Sows)\s*[:.\s]*([0-9][0-9A-Za-z/\-]{0,24})",
+        r"(?i)House\s*(?:No\.?)?\s*[:.\s]*([0-9][0-9A-Za-z/\-]{0,24})",
+        # bare "సంఖ్య :1-271" style
+        r"సంఖ్య\s*[:.\s+]*([0-9][0-9/\-]{1,20})",
+    ]
+    for pat in patterns:
+        m = re.search(pat, text)
+        if not m:
+            continue
+        h = _normalize_house(m.group(1))
+        if h:
             return h
     return ""
 
