@@ -265,7 +265,7 @@ app.get('/{*spa}', (req, res, next) => {
   })
 })
 
-function loadRollEpicsFromDisk() {
+function loadRollFromDisk() {
   const candidates = [
     path.join(dist, 'data/voters.json'),
     path.join(root, 'public/data/voters.json'),
@@ -275,35 +275,54 @@ function loadRollEpicsFromDisk() {
       if (!existsSync(p)) continue
       const data = JSON.parse(readFileSync(p, 'utf8'))
       const voters = Array.isArray(data?.voters) ? data.voters : []
-      return voters.map((v) => String(v?.epic || '').toUpperCase()).filter(Boolean)
+      if (voters.length) return { path: p, voters, meta: data?.meta || {} }
     } catch {
       /* try next */
     }
   }
-  return []
+  return { path: '', voters: [], meta: {} }
+}
+
+function loadRollEpicsFromDisk() {
+  return loadRollFromDisk().voters.map((v) => String(v?.epic || '').toUpperCase()).filter(Boolean)
 }
 
 async function reconcileEnrichmentWithRoll() {
   if (!hasDatabase()) return
-  const epics = loadRollEpicsFromDisk()
-  if (!epics.length) {
+  const { voters, path: rollPath, meta } = loadRollFromDisk()
+  if (!voters.length) {
     console.warn('[db] no voters.json on disk — skip enrichment reconcile')
     return
   }
-  // One-shot full wipe when ops set the flag after a village swap.
-  if (String(process.env.CLEAR_ENRICHMENT || '').trim() === '1') {
+  const epics = voters.map((v) => String(v?.epic || '').toUpperCase()).filter(Boolean)
+  const forceClear = String(process.env.CLEAR_ENRICHMENT || '').trim() === '1'
+  const forceSeed =
+    forceClear ||
+    String(process.env.SEED_ROLL_TO_ENRICHMENT || '').trim() === '1'
+
+  if (forceClear) {
     await clearEnrichment()
     console.log('[db] CLEAR_ENRICHMENT=1 → truncated voter_enrichment')
-    return
-  }
-  const result = await clearStaleEnrichment(epics)
-  if (result.cleared) {
-    console.log(
-      `[db] cleared stale enrichment: ${result.before} rows (0 overlap with ${epics.length} roll EPICs)`,
-    )
   } else {
+    const result = await clearStaleEnrichment(epics)
+    if (result.cleared) {
+      console.log(
+        `[db] cleared stale enrichment: ${result.before} rows (0 overlap with ${epics.length} roll EPICs)`,
+      )
+    } else {
+      console.log(
+        `[db] enrichment ok: ${result.before} rows, overlap=${result.overlap}/${epics.length}`,
+      )
+    }
+  }
+
+  // Load / reload roll PII into Postgres when empty or explicitly requested.
+  const count = await enrichmentCount()
+  if (forceSeed || count === 0) {
+    const n = await replaceEnrichmentFromVoters(voters)
     console.log(
-      `[db] enrichment ok: ${result.before} rows, overlap=${result.overlap}/${epics.length}`,
+      `[db] seeded ${n} enrichment rows from ${rollPath || 'voters.json'} ` +
+        `(wards=${JSON.stringify(meta.wards || [])} total=${meta.total || voters.length})`,
     )
   }
 }
