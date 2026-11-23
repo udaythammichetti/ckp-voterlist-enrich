@@ -12,6 +12,7 @@ import {
   setSessionCookie,
 } from './auth.js'
 import {
+  clearEnrichment,
   databaseHostInfo,
   enrichmentCount,
   getEnrichment,
@@ -19,6 +20,7 @@ import {
   importEnrichmentMap,
   listEnrichment,
   migrate,
+  replaceEnrichmentFromVoters,
   resetPool,
   upsertEnrichment,
   validateDatabaseUrl,
@@ -181,6 +183,24 @@ app.post('/api/enrichment/import', async (req, res) => {
   }
 })
 
+/** Drop all enrichment, optionally reload from voters[] in the body. */
+app.post('/api/enrichment/replace', async (req, res) => {
+  try {
+    if (!hasDatabase()) return res.status(503).json({ error: 'DATABASE_URL missing' })
+    const voters = Array.isArray(req.body?.voters) ? req.body.voters : null
+    if (voters) {
+      const count = await replaceEnrichmentFromVoters(voters)
+      broadcast('enrichment_reload', { count })
+      return res.json({ ok: true, replaced: true, count })
+    }
+    await clearEnrichment()
+    broadcast('enrichment_reload', { count: 0 })
+    res.json({ ok: true, replaced: true, count: 0 })
+  } catch (err) {
+    res.status(500).json({ error: err.message || 'Failed to replace enrichment' })
+  }
+})
+
 app.get('/api/enrichment/:epic', async (req, res) => {
   try {
     if (!hasDatabase()) return res.status(503).json({ error: 'DATABASE_URL missing' })
@@ -246,6 +266,14 @@ app.get('/{*spa}', (req, res, next) => {
 
 async function seedContactsPatch() {
   if (!hasDatabase()) return
+  // Only seed phones onto EPICs that already exist in enrichment (current roll).
+  // Prevents old-village contact patches from reappearing after a Damalacheruvu replace.
+  const existing = await listEnrichment()
+  const known = new Set(Object.keys(existing))
+  if (!known.size) {
+    console.log('[db] contacts patch skipped — enrichment empty (roll not seeded)')
+    return
+  }
   const candidates = [
     path.join(dist, 'data/enrichment_contacts_patch.json'),
     path.join(root, 'public/data/enrichment_contacts_patch.json'),
@@ -268,12 +296,14 @@ async function seedContactsPatch() {
   }
   let applied = 0
   for (const [epic, row] of Object.entries(map)) {
-    if (!epic || !row || typeof row !== 'object') continue
+    const key = String(epic || '').toUpperCase()
+    if (!key || !known.has(key) || !row || typeof row !== 'object') continue
     const patch = {}
     if (row.phone) patch.phone = String(row.phone)
     if (row.currentAddress) patch.currentAddress = String(row.currentAddress)
+    if (row.notes) patch.notes = String(row.notes)
     if (!Object.keys(patch).length) continue
-    await upsertEnrichment(epic, patch)
+    await upsertEnrichment(key, patch)
     applied += 1
   }
   console.log(`[db] seeded contact phones/addresses: ${applied}`)

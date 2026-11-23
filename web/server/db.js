@@ -262,6 +262,81 @@ export async function importEnrichmentMap(map = {}) {
   return count
 }
 
+/** Wipe all enrichment rows (old village / stale EPICs). */
+export async function clearEnrichment() {
+  const db = getPool()
+  if (!db) throw new Error('DATABASE_URL is not configured')
+  const { rowCount } = await db.query('TRUNCATE TABLE voter_enrichment')
+  return rowCount || 0
+}
+
+/**
+ * Replace enrichment with roll PII from a voters[] array.
+ * Keeps phone/address/notes/status empty unless provided on the voter object.
+ */
+export async function replaceEnrichmentFromVoters(voters = []) {
+  const db = getPool()
+  if (!db) throw new Error('DATABASE_URL is not configured')
+  await migrate()
+  await db.query('TRUNCATE TABLE voter_enrichment')
+
+  const client = await db.connect()
+  let count = 0
+  try {
+    await client.query('BEGIN')
+    for (const v of voters) {
+      const epic = String(v?.epic || '').toUpperCase().trim()
+      if (!epic) continue
+      const ageRaw = v.age
+      const age =
+        ageRaw === null || ageRaw === undefined || ageRaw === ''
+          ? null
+          : Number(ageRaw)
+      await client.query(
+        `
+        INSERT INTO voter_enrichment (
+          epic, name, relation_type, relation_name, house, age, gender,
+          phone, current_address, notes, voter_status, updated_at
+        ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,NOW())
+        ON CONFLICT (epic) DO UPDATE SET
+          name = EXCLUDED.name,
+          relation_type = EXCLUDED.relation_type,
+          relation_name = EXCLUDED.relation_name,
+          house = EXCLUDED.house,
+          age = EXCLUDED.age,
+          gender = EXCLUDED.gender,
+          phone = EXCLUDED.phone,
+          current_address = EXCLUDED.current_address,
+          notes = EXCLUDED.notes,
+          voter_status = EXCLUDED.voter_status,
+          updated_at = NOW()
+        `,
+        [
+          epic,
+          String(v.name || v.nameTe || ''),
+          String(v.relationType || ''),
+          String(v.relationName || v.relationNameTe || ''),
+          String(v.house || ''),
+          Number.isFinite(age) ? age : null,
+          String(v.gender || ''),
+          String(v.phone || ''),
+          String(v.currentAddress || ''),
+          String(v.notes || ''),
+          String(v.voterStatus || ''),
+        ],
+      )
+      count += 1
+    }
+    await client.query('COMMIT')
+  } catch (err) {
+    await client.query('ROLLBACK')
+    throw err
+  } finally {
+    client.release()
+  }
+  return count
+}
+
 export async function enrichmentCount() {
   const db = getPool()
   if (!db) return 0
