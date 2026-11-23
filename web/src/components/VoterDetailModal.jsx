@@ -278,7 +278,7 @@ export default function VoterDetailModal() {
 
           <section className="vd-block">
             <h3>Hierarchy</h3>
-            <Row label="Campaign">Chukkavaripalli · Sarpanch 2026</Row>
+            <Row label="Campaign">Damalacheruvu · Sarpanch 2026</Row>
             <Row label="Ward">
               {v.ward != null || v.part != null ? (
                 <Link className="cell-link" to={`/wards/${v.ward ?? v.part}`} onClick={closeVoter}>

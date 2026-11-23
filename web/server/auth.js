@@ -113,7 +113,7 @@ export function loginPageHtml({ error = '', next = '/' } = {}) {
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#0b1410" />
-  <title>Sign in · Chukkavaripalli</title>
+  <title>Sign in · Damalacheruvu</title>
   <style>
     :root { color-scheme: dark; }
     * { box-sizing: border-box; }
@@ -155,7 +155,7 @@ export function loginPageHtml({ error = '', next = '/' } = {}) {
 <body>
   <form class="card" method="POST" action="/login" autocomplete="on">
     <p class="kicker">Sarpanch 2026</p>
-    <h1>Chukkavaripalli</h1>
+    <h1>Damalacheruvu</h1>
     <p class="sub">Sign in to open the campaign desk</p>
     ${err}
     <input type="hidden" name="next" value="${escapeHtml(safeNext)}" />

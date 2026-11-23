@@ -1,6 +1,6 @@
-# Sarpanch Elections Chukkavaripalli
+# Sarpanch Elections Damalacheruvu
 
-React + Vite dashboard for **Sarpanch Elections Chukkavaripalli** (2026 voter list, English), modeled on the KPHP voter app.
+React + Vite dashboard for **Sarpanch Elections Damalacheruvu** (2026 voter list, English), modeled on the KPHP voter app.
 
 ## Features
 

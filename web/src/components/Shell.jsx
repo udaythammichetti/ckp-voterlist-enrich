@@ -24,7 +24,7 @@ function titleForPath(pathname) {
   if (pathname.startsWith('/consolidated') || pathname.startsWith('/validation')) {
     return 'Consolidated'
   }
-  return 'Chukkavaripalli'
+  return 'Damalacheruvu'
 }
 
 function pathMatches(to, pathname, end) {
@@ -38,11 +38,13 @@ export default function Shell() {
   const { lang, setLanguage, t } = useLocale()
   const { pathname } = useLocation()
   const navRef = useRef(null)
+  // Campaign brand — prefer Damalacheruvu even if an older roll is still loaded
+  const place = 'Damalacheruvu'
 
   useEffect(() => {
-    document.title = `${t(titleForPath(pathname))} · Chukkavaripalli`
+    document.title = `${t(titleForPath(pathname))} · ${place}`
     document.documentElement.lang = lang === 'te' ? 'te' : 'en'
-  }, [pathname, lang, t])
+  }, [pathname, lang, t, place])
 
   useEffect(() => {
     const nav = navRef.current
@@ -71,7 +73,7 @@ export default function Shell() {
           <div className="brand-block">
             <Link to="/" className="brand-home" aria-label="Home dashboard">
               <p className="brand-kicker">Sarpanch 2026</p>
-              <p className="brand-mark">Chukkavaripalli</p>
+              <p className="brand-mark">{place}</p>
             </Link>
             <p className="brand-sub">
               {!loading ? `${voters.length.toLocaleString()} electors` : 'Loading…'}
@@ -126,7 +128,7 @@ export default function Shell() {
         </nav>
       </header>
       <p className="print-only print-banner">
-        Chukkavaripalli · {lang === 'te' ? 'తెలుగు' : 'English'} · {t(titleForPath(pathname))}
+        {place} · {lang === 'te' ? 'తెలుగు' : 'English'} · {t(titleForPath(pathname))}
       </p>
       <main className="page">
         <Outlet />

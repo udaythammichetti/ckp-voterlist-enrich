@@ -54,7 +54,7 @@ export default function Dashboard() {
       <section className="hero-panel hero-election hero-campaign">
         <div className="hero-copy">
           <p className="eyebrow">
-            Sarpanch · Chukkavaripalli
+            Sarpanch · Damalacheruvu
             {isTe ? <span className="lang-hint"> · 2026</span> : null}
           </p>
           <h1>Campaign desk</h1>

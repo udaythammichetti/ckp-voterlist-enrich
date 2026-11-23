@@ -1,4 +1,4 @@
-/** Extract + data-quality validation for the Chukkavaripalli voter roll. */
+/** Extract + data-quality validation for the Damalacheruvu voter roll. */
 
 /** Cover-page expectations from the 2026 GP PDF. */
 export const EXPECTED = {

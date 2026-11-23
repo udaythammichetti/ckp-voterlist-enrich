@@ -1,7 +1,8 @@
 /** Persist voter field overrides in localStorage (never writes to voters.json). */
 
-const STORAGE_KEY = 'sarpanch_chukkavaripalli_enrichment_v2'
+const STORAGE_KEY = 'sarpanch_damalacheruvu_enrichment_v1'
 const LEGACY_KEYS = [
+  'sarpanch_chukkavaripalli_enrichment_v2',
   'sarpanch_chukkavaripalli_enrichment_v1',
   'ckp_voter_enrichment_v2',
   'ckp_voter_enrichment_v1',

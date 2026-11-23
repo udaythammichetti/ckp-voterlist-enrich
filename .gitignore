@@ -6,3 +6,9 @@ web/dist/
 __pycache__/
 *.pyc
 .env
+
+# Source ward PDFs (too large for git)
+data/*.pdf
+data/ocr_cache/
+data/ocr_run.log
+data/tmp*/
