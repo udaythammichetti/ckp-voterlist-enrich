@@ -235,8 +235,11 @@ def card_boxes_for_page(page: fitz.Page, zoom: float) -> list[dict]:
                 "photo_pdf": b,
                 "col": col_idx,
                 "y": b[1],
+                "row": round(b[1]),
             }
         )
+    # Stable reading order: top→bottom rows, left→right columns
+    boxes.sort(key=lambda b: (b["row"], b["col"], b["y"]))
     return boxes
 
 

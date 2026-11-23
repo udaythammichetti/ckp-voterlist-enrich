@@ -106,16 +106,22 @@ def ocr_card(card: Image.Image) -> tuple[str, str]:
 
 
 def parse_printed_serial(text: str) -> int | None:
+    """Read the bracketed roll serial printed on the card header (1..9000)."""
+    cands: list[int] = []
     for pat in (
-        r"[\[\(]\s*(\d{1,4})\s*[\]\)]",
-        r"వ\.?\s*సం\.?\s*[\[\(]?\s*(\d{1,4})",
+        r"[\[\(]\s*(\d{3,4})\s*[\]\)]",
+        r"వ\.?\s*సం\.?\s*[\[\(]?\s*(\d{3,4})",
+        r"ఓ\.?\s*జా\.?\s*వ\.?\s*సం\.?\s*[\[\(]?\s*(\d{3,4})",
     ):
-        m = re.search(pat, text or "")
-        if m:
+        for m in re.finditer(pat, text or ""):
             n = int(m.group(1))
-            if 1 <= n <= 2000:
-                return n
-    return None
+            if 1 <= n <= 9000:
+                cands.append(n)
+    if not cands:
+        return None
+    # Prefer 4-digit serials (full roll numbers); last match is usually the card's own.
+    four = [n for n in cands if n >= 1000]
+    return four[-1] if four else cands[-1]
 
 
 def _te_len(s: str) -> int:
@@ -366,28 +372,56 @@ def main() -> None:
     # Deduplicate epics: keep first occurrence in reading order; rename later dupes to keep slots
     seen: set[str] = set()
     voters = []
-    serial = 0
-    for row in prepared:
-        serial += 1
+    # Collect printed serials first to detect missing-card drift (assigned = printed-1).
+    printed_list: list[int | None] = []
+    for idx, row in enumerate(prepared):
+        p = parse_printed_serial(row.get("ocrText") or "")
+        if p is not None and (abs(p - (idx + 1)) <= 3 or abs(p - (idx + 2)) <= 3):
+            printed_list.append(p)
+        else:
+            printed_list.append(None)
+
+    split = None
+    for idx, p in enumerate(printed_list):
+        if p == idx + 2:
+            split = idx
+            break
+    if split is None:
+        split = 0
+
+    for idx, row in enumerate(prepared):
         epic = (row.get("epic") or "").upper()
         if not re.fullmatch(r"[A-Z]{3}\d{7}", epic):
             epic = f"TMP{row['ward']%10}{row['page']:02d}{row['cardIndex']:04d}"
         if epic in seen:
             # keep the person/slot visible with unique key
-            epic = f"DUP{serial:07d}"[:10]
+            epic = f"DUP{idx+1:07d}"[:10]
             if not re.fullmatch(r"[A-Z]{3}\d{7}", epic):
-                epic = f"DUP{serial:07d}"
+                epic = f"DUP{idx+1:07d}"
         seen.add(epic)
         row["epic"] = epic
         if not row.get("photo") and (PHOTO / f"{epic}.jpg").exists():
             row["photo"] = f"/photos/{epic}.jpg"
-        # prefer printed serial when available
-        printed = parse_printed_serial(row.get("ocrText") or "")
-        local_serial = printed or serial
+        # Prefer printed serial; else positional with +1 after missing-card split.
+        printed = printed_list[idx]
+        if printed is not None:
+            serial = printed
+        else:
+            serial = idx + 1 if idx < split else idx + 2
         v = build_voter(row, serial)
         v["page"] = row.get("page")
         v["notes"] = "" if row.get("fromCache") or not epic.startswith(("TMP", "UNK", "DUP")) else "EPIC uncertain — verify"
         voters.append(v)
+
+    # Resolve duplicate serials while keeping reading order
+    used_serials: set[int] = set()
+    for v in voters:
+        s = int(v.get("serial") or 0)
+        while s in used_serials:
+            s += 1
+        v["serial"] = s
+        used_serials.add(s)
+    voters.sort(key=lambda v: (v.get("serial") or 0, v.get("ward") or 0, v.get("page") or 0))
 
     meta = {
         "panchayat": APP_NAME,
