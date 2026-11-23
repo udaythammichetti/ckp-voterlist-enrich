@@ -87,10 +87,37 @@ export function normalizeRow(raw) {
   }
 }
 
+function photoCacheBust(meta = {}) {
+  // Changes whenever the roll/photos are rebuilt so browsers don't keep old faces.
+  return String(
+    meta.photoRevision ||
+      meta.serialSplitIndex ||
+      meta.source ||
+      meta.total ||
+      '1',
+  )
+    .replace(/\s+/g, '')
+    .slice(0, 48)
+}
+
+function withPhotoBust(photo, bust) {
+  const src = cleanStr(photo)
+  if (!src || !bust) return src
+  if (/[?&]v=/.test(src)) return src
+  return `${src}${src.includes('?') ? '&' : '?'}v=${encodeURIComponent(bust)}`
+}
+
 function normalizePayload(data, sourceLabel = 'voters.json') {
   const rows = Array.isArray(data) ? data : data.voters || []
   const meta = Array.isArray(data) ? {} : { ...(data.meta || {}) }
-  const normalized = rows.map(normalizeRow).filter((r) => r.epic || r.name)
+  const bust = photoCacheBust(meta)
+  const normalized = rows
+    .map((raw) => {
+      const row = normalizeRow(raw)
+      row.photo = withPhotoBust(row.photo, bust)
+      return row
+    })
+    .filter((r) => r.epic || r.name)
   normalized.sort((a, b) => {
     const sa = a.serial ?? 1e9
     const sb = b.serial ?? 1e9
@@ -100,6 +127,7 @@ function normalizePayload(data, sourceLabel = 'voters.json') {
     voters: applyEnrichment(normalized),
     meta: {
       ...meta,
+      photoRevision: meta.photoRevision || bust,
       loadedFrom: sourceLabel,
       loadedAt: new Date().toISOString(),
     },

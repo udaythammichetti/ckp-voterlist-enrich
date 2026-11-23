@@ -46,7 +46,8 @@
     "missingAge": 306,
     "missingGender": 62,
     "placeholderEpics": 79,
-    "serialSplitIndex": 1728
+    "serialSplitIndex": 1728,
+    "photoRevision": "2026-11-23-serial-photo-fix"
   },
   "voters": [
     {

@@ -256,6 +256,31 @@ app.get('/api/events', (req, res) => {
   req.on('error', cleanup)
 })
 
+// Photos + roll JSON must not stick for an hour — wrong faces after redeploy.
+app.use(
+  '/photos',
+  express.static(path.join(dist, 'photos'), {
+    index: false,
+    maxAge: 0,
+    etag: true,
+    lastModified: true,
+    setHeaders(res) {
+      res.setHeader('Cache-Control', 'no-cache, must-revalidate')
+    },
+  }),
+)
+app.use(
+  '/data',
+  express.static(path.join(dist, 'data'), {
+    index: false,
+    maxAge: 0,
+    etag: true,
+    lastModified: true,
+    setHeaders(res) {
+      res.setHeader('Cache-Control', 'no-cache, must-revalidate')
+    },
+  }),
+)
 app.use(express.static(dist, { index: false, maxAge: '1h' }))
 
 app.get('/{*spa}', (req, res, next) => {
