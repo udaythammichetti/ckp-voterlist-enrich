@@ -137,31 +137,51 @@ async function tryFetchJson(url) {
   }
 }
 
+function voterCount(data) {
+  if (!data) return 0
+  if (Array.isArray(data)) return data.length
+  return Array.isArray(data.voters) ? data.voters.length : 0
+}
+
+function pickBetterRoll(a, aLabel, b, bLabel) {
+  const ca = voterCount(a)
+  const cb = voterCount(b)
+  if (!ca && !cb) return null
+  if (!ca) return { data: b, label: bLabel }
+  if (!cb) return { data: a, label: aLabel }
+  // Prefer the larger roll (guards against a stale voters_latest / IDB copy).
+  if (cb > ca) return { data: b, label: bLabel }
+  if (ca > cb) return { data: a, label: aLabel }
+  // Same size → prefer explicit latest save, else voters.json
+  if (aLabel.includes('latest')) return { data: a, label: aLabel }
+  if (bLabel.includes('latest')) return { data: b, label: bLabel }
+  return { data: a, label: aLabel }
+}
+
 /**
- * Project folder is source of truth after Save version:
- *   1) public/data/voters_latest.json
+ * Server roll files beat browser caches:
+ *   1) better of voters.json / voters_latest.json (larger wins)
  *   2) newest file in public/data/versions/
- *   3) browser working copy (unsaved edits)
- *   4) original voters.json
+ *   3) browser working copy only if no server roll exists
  */
 export async function loadBestVoters() {
-  // 1) Project latest (written by Save version)
+  const rollFile = await tryFetchJson('/data/voters.json')
   const latestFile = await tryFetchJson('/data/voters_latest.json')
-  if (latestFile && (latestFile.voters?.length || Array.isArray(latestFile))) {
-    return normalizePayload(latestFile, 'voters_latest.json')
+  const best = pickBetterRoll(latestFile, 'voters_latest.json', rollFile, 'voters.json')
+  if (best) {
+    return normalizePayload(best.data, best.label)
   }
 
-  // 2) Newest dated backup in project versions/
   const manifest = await tryFetchJson('/data/versions/manifest.json')
   const latestName = manifest?.latest || manifest?.versions?.[0]?.filename
   if (latestName) {
     const versionData = await tryFetchJson(`/data/versions/${latestName}`)
-    if (versionData && (versionData.voters?.length || Array.isArray(versionData))) {
+    if (voterCount(versionData)) {
       return normalizePayload(versionData, latestName)
     }
   }
 
-  // 3) Browser working copy (edits not yet saved to project)
+  // Offline / first-visit fallback only — never mask a deployed roll.
   const idb = await loadLatestDataset()
   if (idb?.voters?.length) {
     return normalizePayload(
@@ -170,8 +190,7 @@ export async function loadBestVoters() {
     )
   }
 
-  // 4) Original extract — never overwritten by Save version
-  return loadVotersFromJson('/data/voters.json', 'voters.json')
+  throw new Error('Failed to load voters.json')
 }
 
 /** @deprecated use loadVotersFromJson */

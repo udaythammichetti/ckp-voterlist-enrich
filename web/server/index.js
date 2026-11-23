@@ -13,6 +13,7 @@ import {
 } from './auth.js'
 import {
   clearEnrichment,
+  clearStaleEnrichment,
   databaseHostInfo,
   enrichmentCount,
   getEnrichment,
@@ -264,6 +265,49 @@ app.get('/{*spa}', (req, res, next) => {
   })
 })
 
+function loadRollEpicsFromDisk() {
+  const candidates = [
+    path.join(dist, 'data/voters.json'),
+    path.join(root, 'public/data/voters.json'),
+  ]
+  for (const p of candidates) {
+    try {
+      if (!existsSync(p)) continue
+      const data = JSON.parse(readFileSync(p, 'utf8'))
+      const voters = Array.isArray(data?.voters) ? data.voters : []
+      return voters.map((v) => String(v?.epic || '').toUpperCase()).filter(Boolean)
+    } catch {
+      /* try next */
+    }
+  }
+  return []
+}
+
+async function reconcileEnrichmentWithRoll() {
+  if (!hasDatabase()) return
+  const epics = loadRollEpicsFromDisk()
+  if (!epics.length) {
+    console.warn('[db] no voters.json on disk — skip enrichment reconcile')
+    return
+  }
+  // One-shot full wipe when ops set the flag after a village swap.
+  if (String(process.env.CLEAR_ENRICHMENT || '').trim() === '1') {
+    await clearEnrichment()
+    console.log('[db] CLEAR_ENRICHMENT=1 → truncated voter_enrichment')
+    return
+  }
+  const result = await clearStaleEnrichment(epics)
+  if (result.cleared) {
+    console.log(
+      `[db] cleared stale enrichment: ${result.before} rows (0 overlap with ${epics.length} roll EPICs)`,
+    )
+  } else {
+    console.log(
+      `[db] enrichment ok: ${result.before} rows, overlap=${result.overlap}/${epics.length}`,
+    )
+  }
+}
+
 async function seedContactsPatch() {
   if (!hasDatabase()) return
   // Only seed phones onto EPICs that already exist in enrichment (current roll).
@@ -313,7 +357,9 @@ async function main() {
   if (hasDatabase()) {
     await migrateWithRetry()
     console.log('[db] migrated voter_enrichment')
+    await reconcileEnrichmentWithRoll()
     await seedContactsPatch()
+    console.log(`[db] enrichmentCount=${await enrichmentCount()}`)
   } else {
     console.warn('[db] DATABASE_URL not set — API enrichment disabled')
   }

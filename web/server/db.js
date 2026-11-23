@@ -266,8 +266,34 @@ export async function importEnrichmentMap(map = {}) {
 export async function clearEnrichment() {
   const db = getPool()
   if (!db) throw new Error('DATABASE_URL is not configured')
-  const { rowCount } = await db.query('TRUNCATE TABLE voter_enrichment')
-  return rowCount || 0
+  await db.query('TRUNCATE TABLE voter_enrichment')
+  return 0
+}
+
+/**
+ * If enrichment EPICs don't match the current roll at all, drop them.
+ * Fixes Render still holding Chukkavaripalli enrichment after a Damalacheruvu deploy.
+ */
+export async function clearStaleEnrichment(rollEpics = []) {
+  const db = getPool()
+  if (!db) throw new Error('DATABASE_URL is not configured')
+  const epicSet = new Set(
+    (rollEpics || []).map((e) => String(e || '').toUpperCase()).filter(Boolean),
+  )
+  if (!epicSet.size) return { cleared: false, before: 0, overlap: 0 }
+
+  const before = await enrichmentCount()
+  if (!before) return { cleared: false, before: 0, overlap: 0 }
+
+  const { rows } = await db.query('SELECT epic FROM voter_enrichment')
+  const overlap = rows.reduce(
+    (n, r) => n + (epicSet.has(String(r.epic || '').toUpperCase()) ? 1 : 0),
+    0,
+  )
+  if (overlap > 0) return { cleared: false, before, overlap }
+
+  await db.query('TRUNCATE TABLE voter_enrichment')
+  return { cleared: true, before, overlap: 0 }
 }
 
 /**
